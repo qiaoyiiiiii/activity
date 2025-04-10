@@ -1,31 +1,30 @@
 <template>
   <nav class="navbar">
-    <div class="navbar-brand">
-      <a href="/" class="navbar-logo">
-        <span style="color:#A3F0D4;">A</span>
-        <span style="color:#A3F0D4;">c</span>
-        <span style="color:#66DFB0;">t</span>
-        <span style="color:#66DFB0;">i</span>
-        <span style="color:#9BE1FF;">v</span>
-        <span style="color:#9BE1FF;">i</span>
-        <span style="color:#C7EEFF;">t</span>
-        <span style="color:#C7EEFF;">y</span>
-      </a>
-    </div>
+    <logo></logo>
     <ul class="navbar-menu">
       <li class="navbar-item">
-        <a href="/" class="navbar-link">首页</a>
+        <router-link to="/" class="navbar-link" active-class="active">首页</router-link>
       </li>
       <li class="navbar-item">
-        <a href="/activities" class="navbar-link">活动列表</a>
+        <router-link to="/activity" class="navbar-link" active-class="active">活动列表</router-link>
       </li>
       <li class="navbar-item">
-        <a href="/create" class="navbar-link">创建活动</a>
+        <router-link to="/create" class="navbar-link" active-class="active">创建活动</router-link>
       </li>
     </ul>
     <div class="avatar">
         <div v-if="user">
-            <el-avatar :size="50" :src="user.avatar" :alt="user.name">{{ user.name }}</el-avatar>
+              <el-popover placement="bottom" trigger="hover">
+              <template #reference>
+               <el-avatar :size="50" :src="user.avatar" :alt="user.name" @click="$router.push('/personal')">{{ user.name }}</el-avatar> 
+              </template>
+              <template #default>
+                <div class="btn-group">
+               <el-button @click="$router.push('/personal')" v-if="$route.path !== '/personal'">个人中心</el-button> 
+               <el-button @click="$router.push('/login')">退出登录</el-button>
+               </div>
+              </template>
+            </el-popover>
         </div>
         <div v-else>
             <el-button type="info" plain round @click="$router.push('/login')" style="align-item:center">登录</el-button>
@@ -37,6 +36,7 @@
 <script setup>
 import { ref } from 'vue';
 import { onMounted } from 'vue';
+import logo from './logo.vue'
 import { ElAvatar, ElButton } from 'element-plus';
 
 const user=ref(null);
@@ -44,26 +44,26 @@ const user=ref(null);
 onMounted(() => {
   if (localStorage.getItem('user')) {
     user.value = JSON.parse(localStorage.getItem('user'));
+    console.log(user.value);
+    
   }
 });
 </script>
 
 <style scoped>
+*{
+  cursor: pointer;
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: rgba(34, 139, 94, 0.8); 
+  background-color: rgba(34, 139, 94, 0.8);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   z-index: 1000;
-}
-
-.navbar-logo {
-  text-decoration: none;
-  font-size: 2rem;
-  font-weight: bold;
 }
 
 .navbar-menu {
@@ -88,9 +88,10 @@ onMounted(() => {
   font-weight: 400;
 }
 
-.navbar-link:hover {
-  background-color: #e9ecef;
-}
+.navbar-link.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+} 
 
 .avatar {
   height: 100%;
@@ -109,5 +110,15 @@ onMounted(() => {
   background-color: var(--color-primary-light);
   border-color: var(--color-primary-light);
   transform: translateY(-2px);
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
 }
 </style>

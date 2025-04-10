@@ -1,6 +1,5 @@
 <script setup>
 import Navbar from './components/navbar.vue'
-import Index from'./views/index.vue'
 </script>
 
 <template>
@@ -12,9 +11,11 @@ import Index from'./views/index.vue'
     <router-view />
   </main>
 </div>
-  
+
 </template>
 
 <style scoped>
-
+main {
+  min-height: calc(100vh - 80px);
+}
 </style>

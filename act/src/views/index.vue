@@ -49,18 +49,19 @@
       </div>
     </div>
 
-    <!-- 活动分类区域 -->
+
+<!-- 活动分类区域 -->
     <div class="activity-categories-section">
       <h2 class="section-title">活动分类</h2>
       <div class="category-grid">
-        <div v-for="(category, index) in categories" :key="index" class="category-card" @click="filterByCategory(category)">
+        <div v-for="(item, index) in categories.category" 
+            :key="index" 
+            class="category-card" 
+            @click="filterByCategory(item.label)">
           <div class="category-icon">
-            <el-icon v-if="index === 0"><Reading /></el-icon>
-            <el-icon v-else-if="index === 1"><Football /></el-icon>
-            <el-icon v-else-if="index === 2"><Film /></el-icon>
-            <el-icon v-else><UserFilled /></el-icon>
+            <component :is="item.icon" />
           </div>
-          <h3 class="category-title">{{category}}</h3>
+          <h3 class="category-title">{{item.label}}</h3>
         </div>
       </div>
     </div>
@@ -69,6 +70,16 @@
 
 <script setup>
 import { ref } from 'vue';
+import categories from '../static/category.js';
+import { Reading, Football, Film, UserFilled } from '@element-plus/icons-vue';
+
+// 确保图标组件可用
+const icons = {
+  Reading,
+  Football,
+  Film,
+  UserFilled
+}
 
 // 轮播图数据
 const featuredActivities = ref([
@@ -145,9 +156,6 @@ const latestActivities = ref([
   }
 ]);
 
-// 活动分类数据
-const categories = ref(['学术讲座', '体育赛事', '文艺活动', '社团活动']);
-
 // 推荐活动数据
 const recommendedActivities = ref([
   {
@@ -183,7 +191,6 @@ const recommendedActivities = ref([
     image: 'https://via.placeholder.com/400x250/a7e8e2/333333?text=AI大会'
   }
 ]);
-
 
 // 查看活动详情
 const viewDetails = (activityId) => {

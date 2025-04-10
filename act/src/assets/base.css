@@ -25,6 +25,12 @@
   --vt-c-text-light-2: #4a5568; /* 次要文本颜色 */
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.8);
+
+  /* 分割线颜色 */
+  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
+  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
+  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
+  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
 }
 
 /* 语义化颜色变量 */
@@ -60,7 +66,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* 深色模式背景 */
-    --color-background: #4a5568;
+    --color-background: #1a202c;
     --color-background-soft: #2d3748;
     --color-background-mute: #2c3e50;
 
