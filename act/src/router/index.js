@@ -9,7 +9,7 @@ const router=createRouter({
       name: 'Home'
     },
     {
-      path:'/activities',component:()=>import('../views/activity.vue')
+      path:'/activity',component:()=>import('../views/activity.vue')
     },
     {
       path:'/create',component:()=>import('../views/create.vue')

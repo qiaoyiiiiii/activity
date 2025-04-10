@@ -3,55 +3,77 @@
     <logo></logo>
     <ul class="navbar-menu">
       <li class="navbar-item">
-        <router-link to="/" class="navbar-link" active-class="active">首页</router-link>
+        <router-link to="/" class="navbar-link" active-class="active"
+          >首页</router-link
+        >
       </li>
       <li class="navbar-item">
-        <router-link to="/activity" class="navbar-link" active-class="active">活动列表</router-link>
+        <router-link to="/activity" class="navbar-link" active-class="active"
+          >活动列表</router-link
+        >
       </li>
       <li class="navbar-item">
-        <router-link to="/create" class="navbar-link" active-class="active">创建活动</router-link>
+        <router-link to="/create" class="navbar-link" active-class="active"
+          >创建活动</router-link
+        >
       </li>
     </ul>
     <div class="avatar">
-        <div v-if="user">
-              <el-popover placement="bottom" trigger="hover">
-              <template #reference>
-               <el-avatar :size="50" :src="user.avatar" :alt="user.name" @click="$router.push('/personal')">{{ user.name }}</el-avatar> 
-              </template>
-              <template #default>
-                <div class="btn-group">
-               <el-button @click="$router.push('/personal')" v-if="$route.path !== '/personal'">个人中心</el-button> 
-               <el-button @click="$router.push('/login')">退出登录</el-button>
-               </div>
-              </template>
-            </el-popover>
-        </div>
-        <div v-else>
-            <el-button type="info" plain round @click="$router.push('/login')" style="align-item:center">登录</el-button>
-        </div>
+      <div v-if="user">
+        <el-popover placement="bottom" trigger="hover">
+          <template #reference>
+            <el-avatar
+              :size="50"
+              :src="user.avatar"
+              :alt="user.name"
+              @click="$router.push('/personal')"
+              >{{ user.name }}</el-avatar
+            >
+          </template>
+          <template #default>
+            <div class="btn-group">
+              <el-button
+                @click="$router.push('/personal')"
+                v-if="$route.path !== '/personal'"
+                >个人中心</el-button
+              >
+              <el-button @click="$router.push('/login')">退出登录</el-button>
+            </div>
+          </template>
+        </el-popover>
+      </div>
+      <div v-else>
+        <el-button
+          type="info"
+          plain
+          round
+          @click="$router.push('/login')"
+          style="align-item: center"
+          >登录</el-button
+        >
+      </div>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { onMounted } from 'vue';
-import logo from './logo.vue'
-import { ElAvatar, ElButton } from 'element-plus';
+import { ref } from "vue";
+import { onMounted } from "vue";
+import logo from "./logo.vue";
+import { ElAvatar, ElButton } from "element-plus";
 
-const user=ref(null);
+const user = ref(null);
 
 onMounted(() => {
-  if (localStorage.getItem('user')) {
-    user.value = JSON.parse(localStorage.getItem('user'));
+  if (localStorage.getItem("user")) {
+    user.value = JSON.parse(localStorage.getItem("user"));
     console.log(user.value);
-    
   }
 });
 </script>
 
 <style scoped>
-*{
+* {
   cursor: pointer;
 }
 
@@ -91,7 +113,7 @@ onMounted(() => {
 .navbar-link.active {
   color: #fff;
   border-bottom: 2px solid #fff;
-} 
+}
 
 .avatar {
   height: 100%;

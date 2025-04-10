@@ -18,16 +18,7 @@
     <div class="auth-card">
       <div class="auth-header">
         <div class="logo-container">
-          <div class="logo">
-            <span style="color:#A3F0D4;">A</span>
-            <span style="color:#A3F0D4;">c</span>
-            <span style="color:#66DFB0;">t</span>
-            <span style="color:#66DFB0;">i</span>
-            <span style="color:#9BE1FF;">v</span>
-            <span style="color:#9BE1FF;">i</span>
-            <span style="color:#C7EEFF;">t</span>
-            <span style="color:#C7EEFF;">y</span>
-          </div>
+          <logo />
         </div>
         <h2 class="auth-title">{{ isLogin ? '欢迎回来' : '创建新账号' }}</h2>
         <p class="auth-subtitle">{{ isLogin ? '登录您的账号以继续' : '填写以下信息以创建您的账号' }}</p>
@@ -145,6 +136,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import logo from '../components/logo.vue';
 import { Calendar, User, Location, Star, Message, Lock } from '@element-plus/icons-vue';
 
 const router = useRouter();
