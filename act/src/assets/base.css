@@ -1,5 +1,6 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* 学生活动系统颜色主题 - 浅青色和浅蓝色主题 */
 :root {
+  /* 基础颜色 */
   --vt-c-white: #ffffff;
   --vt-c-white-soft: #f8f8f8;
   --vt-c-white-mute: #f2f2f2;
@@ -8,45 +9,75 @@
   --vt-c-black-soft: #222222;
   --vt-c-black-mute: #282828;
 
-  --vt-c-indigo: #2c3e50;
+  /* 主题颜色 - 浅青色和浅蓝色 */
+  --vt-c-primary: #4ecdc4; /* 浅青色 - 主色 */
+  --vt-c-primary-light: #a7e8e2; /* 更浅的青色 */
+  --vt-c-primary-dark: #36a39b; /* 深一点的青色 */
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --vt-c-secondary: #6cb2eb; /* 浅蓝色 - 辅助色 */
+  --vt-c-secondary-light: #b8d8f5; /* 更浅的蓝色 */
+  --vt-c-secondary-dark: #4a94d6; /* 深一点的蓝色 */
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
+  --vt-c-accent: #ff6b6b; /* 强调色 - 用于按钮等 */
+
+  /* 文本颜色 */
+  --vt-c-text-light-1: #2d3748; /* 主要文本颜色 */
+  --vt-c-text-light-2: #4a5568; /* 次要文本颜色 */
   --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --vt-c-text-dark-2: rgba(235, 235, 235, 0.8);
 }
 
-/* semantic color variables for this project */
+/* 语义化颜色变量 */
 :root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  /* 背景颜色 */
+  --color-background: #f0f9f8;;
+  --color-background-soft: #f0f9f8; /* 带有浅青色调的背景 */
+  --color-background-mute: #edf2fa; /* 带有浅蓝色调的背景 */
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
+  /* 主题色应用 */
+  --color-primary: var(--vt-c-primary);
+  --color-primary-light: var(--vt-c-primary-light);
+  --color-secondary: var(--vt-c-secondary);
+  --color-secondary-light: var(--vt-c-secondary-light);
+  --color-accent: var(--vt-c-accent);
 
+  /* 边框颜色 */
+  --color-border: #dbeae9; /* 浅青色边框 */
+  --color-border-hover: var(--vt-c-primary); /* 悬停时变为主色 */
+
+  /* 文本颜色 */
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
+  --color-text-light: var(--vt-c-text-light-2);
 
+  /* 布局变量 */
   --section-gap: 160px;
+  --content-width: 80%;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+    /* 深色模式背景 */
+    --color-background: #4a5568;
+    --color-background-soft: #2d3748;
+    --color-background-mute: #2c3e50;
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+    /* 深色模式下的主题色 - 稍微亮一些 */
+    --color-primary: #5edfd7; /* 亮一点的青色 */
+    --color-primary-light: #a7e8e2;
+    --color-secondary: #7fc1f4; /* 亮一点的蓝色 */
+    --color-secondary-light: #b8d8f5;
 
+    /* 深色模式边框 */
+    --color-border: #4a5568;
+    --color-border-hover: var(--color-primary);
+
+    /* 深色模式文本 */
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+    --color-text-light: rgba(235, 235, 235, 0.6);
   }
 }
 
@@ -84,3 +115,4 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
