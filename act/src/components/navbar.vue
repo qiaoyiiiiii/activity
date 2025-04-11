@@ -106,7 +106,7 @@ onMounted(() => {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: background-color 0.3s;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 400;
 }
 

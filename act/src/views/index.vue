@@ -96,7 +96,7 @@ const latestActivities = ref([
     time: '2025.03.20',
     location: '旧金山湾区',
     participants: 520,
-    image: '	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover'
+    image: 'https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover'
   },
   {
     id: 2,
@@ -249,15 +249,6 @@ const filterByCategory = (category) => {
 .latest-activities {
   padding: 2rem 0;
   background-color: var(--color-background-soft);
-}
-
-.section-title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: var(--color-heading);
-  font-size: 2rem;
-  position: relative;
-  padding-bottom: 1rem;
 }
 
 .section-title:after {

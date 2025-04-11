@@ -6,6 +6,15 @@
   font-weight: normal;
 }
 
+.section-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--color-heading);
+  font-size: 2rem;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
 /* a,
 .green {
   text-decoration: none;
