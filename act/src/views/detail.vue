@@ -146,9 +146,10 @@
               </div>
               <div class="comment-text">{{ comment.content }}</div>
               <div class="comment-actions">
-                
                 <span class="action-item">
-                  <span class="material-icons" style="font-size:1em;">thumb_up</span>
+                  <span class="material-icons" style="font-size: 1em"
+                    >thumb_up</span
+                  >
                   <span>{{ comment.likes || 0 }}</span>
                 </span>
               </div>

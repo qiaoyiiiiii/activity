@@ -30,34 +30,34 @@
       </el-form-item>
 
       <!-- 活动地址 -->
-      <el-form-item label="活动地址" required style="flex-direction: row">
+      <el-form-item label="活动地址" required>
         <div class="location-inputs">
-          <el-select
-            v-model="formData.country"
-            placeholder="国家"
-            width="100px"
-          >
-            <el-option label="中国" value="china" />
-          </el-select>
           <el-select
             v-model="formData.province"
             placeholder="省份/直辖市"
-            width="100px"
+            style="width: 250px"
           >
             <el-option label="北京市" value="beijing" />
           </el-select>
           <el-select
             v-model="formData.city"
-            placeholder="城市/地区"
-            width="100px"
+            placeholder="地区"
+            style="width: 200px"
+          >
+            <el-option label="北京市" value="haidian" />
+          </el-select>
+          <el-select
+            v-model="formData.city"
+            placeholder="地区"
+            style="width: 200px"
           >
             <el-option label="海淀区" value="haidian" />
           </el-select>
-        </div>
-           <el-input
+          <el-input
             v-model="formData.address"
             placeholder="请先选择省市，然后输入详细地址"
           />
+        </div>
       </el-form-item>
 
       <!-- 活动海报 -->
@@ -78,7 +78,7 @@
           </div>
         </div>
         <div class="upload-tips">
-                      <el-button type="success" class="poster-library-btn"
+          <el-button type="success" class="poster-library-btn"
             >海报图库</el-button
           >
           <p>温馨提示：</p>
@@ -92,19 +92,54 @@
         <el-select
           v-model="formData.type"
           placeholder="请选择活动类型，仅支持1个"
+          value-key="label"
+          clearable
         >
-          <el-option label="讲座" value="lecture" />
-          <el-option label="展览" value="exhibition" />
-          <el-option label="音乐会" value="concert" />
+          <el-option
+            v-for="item in categories.category"
+            :key="item.label"
+            :label="item.label"
+            :value="item.label"
+          >
+            <el-tag type="success">{{ item.label }}</el-tag>
+          </el-option>
+          <template #tag>
+            <el-tag type="success">{{ formData.type }}</el-tag>
+          </template>
         </el-select>
       </el-form-item>
+
+      <el-form-item label="活动详情">
+        <el-input
+          type="textarea"
+          :rows="4"
+          v-model="formData.description"
+          placeholder="点击编辑活动详情（支持Markdown格式）"
+          @click="openMarkdownEditor"
+          readonly
+        ></el-input>
+      </el-form-item>
     </el-form>
+    <Dialog
+      :dialogVisible="dialogVisible"
+      title="编辑活动详情（Markdown格式）"
+      width="80%"
+      :loading="loading"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    >
+      <Markdown v-model="markdownContent" @change="handleChange" />
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { Plus } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
+import categories from "../static/category.js";
+import Dialog from "../components/dialog.vue";
+import Markdown from "../components/markdown_new.vue";
 
 const formData = ref({
   title: "",
@@ -117,10 +152,62 @@ const formData = ref({
   hideLocation: false,
   hasLiveStream: false,
   type: "",
+  description: "ao",
 });
 
+const dialogVisible = ref(true);
+const loading = ref(false);
+const markdownContent = ref("");
+
+// 打开Markdown编辑器
+const openMarkdownEditor = () => {
+  // 将当前活动详情内容设置到Markdown编辑器
+  markdownContent.value = formData.value.description;
+  dialogVisible.value = true;
+};
+
+// 确认编辑
+const handleConfirm = () => {
+  loading.value = true;
+  try {
+    // 将Markdown编辑器的内容保存到活动详情
+    formData.value.description = markdownContent.value;
+    ElMessage.success("活动详情已更新");
+    dialogVisible.value = false;
+  } catch (error) {
+    ElMessage.error("保存失败，请重试");
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 取消编辑
+const handleCancel = () => {
+  // 不保存更改，直接关闭对话框
+  dialogVisible.value = false;
+  ElMessage.info("已取消编辑");
+};
+
+// 处理Markdown内容变化
+const handleChange = (value) => {
+  markdownContent.value = value;
+};
+
+// 处理活动海报上传
 const beforePosterUpload = (file) => {
   // 处理图片上传逻辑
+  const isImage = file.type.startsWith("image/");
+  const isLt4M = file.size / 1024 / 1024 < 4;
+
+  if (!isImage) {
+    ElMessage.error("活动海报只能是图片格式!");
+    return false;
+  }
+  if (!isLt4M) {
+    ElMessage.error("活动海报大小不能超过 4MB!");
+    return false;
+  }
+  return true;
 };
 </script>
 
@@ -175,9 +262,7 @@ const beforePosterUpload = (file) => {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
-}
-
-.location-inputs :deep(.el-select) {
+  width: 100%;
   flex: 1;
 }
 

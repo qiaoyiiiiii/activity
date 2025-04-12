@@ -19,6 +19,7 @@
       </li>
     </ul>
     <div class="avatar">
+      <el-icon style="font-size: 1.5rem;color: #fff"><Bell /></el-icon>
       <div v-if="user">
         <el-popover placement="bottom" trigger="hover">
           <template #reference>
@@ -117,6 +118,11 @@ onMounted(() => {
 
 .avatar {
   height: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 :deep(.el-button) {
