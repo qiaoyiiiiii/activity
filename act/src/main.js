@@ -5,6 +5,8 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router/index"; // 确保导入router
+import auth from "./Utils/auth";
+import request from "./Utils/axios";
 
 // 导入 v-md-editor 相关库
 import VMdEditor from "@kangc/v-md-editor";
@@ -22,6 +24,8 @@ VMdEditor.use(githubTheme, {
 });
 
 const app = createApp(App);
+app.directive('auth', auth)
+app.use(request)
 app.use(ElementPlus);
 app.use(router); // 使用router
 app.use(VMdEditor);

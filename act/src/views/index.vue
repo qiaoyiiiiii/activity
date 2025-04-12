@@ -3,7 +3,10 @@
     <!-- 轮播图区域 -->
     <div class="carousel">
       <el-carousel :interval="5000" arrow="always">
-        <el-carousel-item v-for="(activity, index) in featuredActivities" :key="index">
+        <el-carousel-item
+          v-for="(activity, index) in featuredActivities"
+          :key="index"
+        >
           <img :src="activity.image" :alt="activity.name" />
           <div class="carousel-caption">
             <h3>{{ activity.name }}</h3>
@@ -17,15 +20,25 @@
     <div class="latest-activities">
       <h2 class="section-title">最新活动</h2>
       <div class="activity-grid">
-        <div v-for="(activity, index) in latestActivities" :key="index" class="activity-card" @click="viewDetails(activity.id)">
+        <div
+          v-for="(activity, index) in latestActivities"
+          :key="index"
+          class="activity-card"
+          @click="viewDetails(activity.id)"
+        >
           <div class="activity-image">
-            <img :src="activity.image" :alt="activity.name">
+            <img :src="activity.image" :alt="activity.name" />
             <div class="activity-date">{{ activity.time }}</div>
           </div>
           <div class="activity-content">
             <h3 class="activity-title">{{ activity.name }}</h3>
-            <p class="activity-location"><el-icon><Location /></el-icon> {{ activity.location }}</p>
-            <p class="activity-participants"><el-icon><User /></el-icon> 已有 {{ activity.participants }} 人报名</p>
+            <p class="activity-location">
+              <el-icon><Location /></el-icon> {{ activity.location }}
+            </p>
+            <p class="activity-participants">
+              <el-icon><User /></el-icon> 已有
+              {{ activity.participants }} 人报名
+            </p>
           </div>
         </div>
       </div>
@@ -35,33 +48,46 @@
     <div class="recommended-activities">
       <h2 class="section-title">推荐活动</h2>
       <div class="activity-grid">
-        <div v-for="(activity, index) in recommendedActivities" :key="index" class="activity-card" @click="viewDetails(activity.id)">
+        <div
+          v-for="(activity, index) in recommendedActivities"
+          :key="index"
+          class="activity-card"
+          @click="viewDetails(activity.id)"
+        >
           <div class="activity-image">
-            <img :src="activity.image" :alt="activity.name">
+            <img :src="activity.image" :alt="activity.name" />
             <div class="activity-date">{{ activity.time }}</div>
           </div>
           <div class="activity-content">
             <h3 class="activity-title">{{ activity.name }}</h3>
-            <p class="activity-location"><el-icon><Location /></el-icon> {{ activity.location }}</p>
-            <p class="activity-participants"><el-icon><User /></el-icon> 已有 {{ activity.participants }} 人报名</p>
+            <p class="activity-location">
+              <el-icon><Location /></el-icon> {{ activity.location }}
+            </p>
+            <p class="activity-participants">
+              <el-icon><User /></el-icon> 已有
+              {{ activity.participants }} 人报名
+            </p>
           </div>
         </div>
       </div>
     </div>
 
-
-<!-- 活动分类区域 -->
+    <!-- 活动分类区域 -->
     <div class="activity-categories-section">
       <h2 class="section-title">活动分类</h2>
       <div class="category-grid">
-        <div v-for="(item, index) in categories.category" 
-            :key="index" 
-            class="category-card" 
-            @click="filterByCategory(item.label)">
+        <div
+          v-for="(item, index) in categories.category"
+          :key="index"
+          class="category-card"
+          @click="filterByCategory(item.label)"
+        >
           <div class="category-icon">
-            <component :is="item.icon" />
+            <el-icon :icon="getIcon(item.icon)">
+              <component :is="getIcon(item.icon)" />
+            </el-icon>
           </div>
-          <h3 class="category-title">{{item.label}}</h3>
+          <h3 class="category-title">{{ item.label }}</h3>
         </div>
       </div>
     </div>
@@ -69,139 +95,153 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import categories from '../static/category.js';
-import { Reading, Football, Film, UserFilled } from '@element-plus/icons-vue';
+import { ref } from "vue";
+import categories from "../static/category.js";
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
-// 确保图标组件可用
-const icons = {
-  Reading,
-  Football,
-  Film,
-  UserFilled
-}
+const getIcon = (iconName) => {
+  return ElementPlusIconsVue[iconName]; // 动态获取图标组件
+};
 
 // 轮播图数据
 const featuredActivities = ref([
-  { name: '活动1', description: '这是活动1的简介', image: '	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover' },
-  { name: '活动2', description: '这是活动2的简介', image: '	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover' },
-  { name: '活动3', description: '这是活动3的简介', image: '	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover' }
+  {
+    name: "活动1",
+    description: "这是活动1的简介",
+    image:
+      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
+  },
+  {
+    name: "活动2",
+    description: "这是活动2的简介",
+    image:
+      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
+  },
+  {
+    name: "活动3",
+    description: "这是活动3的简介",
+    image:
+      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
+  },
 ]);
 
 // 最新活动数据
 const latestActivities = ref([
   {
     id: 1,
-    name: '好游戏的基石：连接、创意与创新',
-    time: '2025.03.20',
-    location: '旧金山湾区',
+    name: "好游戏的基石：连接、创意与创新",
+    time: "2025.03.20",
+    location: "旧金山湾区",
     participants: 520,
-    image: 'https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover'
+    image:
+      "https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
   },
   {
     id: 2,
-    name: '人工智能与教育的融合',
-    time: '2025.04.15',
-    location: '线上直播',
+    name: "人工智能与教育的融合",
+    time: "2025.04.15",
+    location: "线上直播",
     participants: 1024,
-    image: 'https://via.placeholder.com/400x250/6cb2eb/ffffff?text=AI教育峰会'
+    image: "https://via.placeholder.com/400x250/6cb2eb/ffffff?text=AI教育峰会",
   },
   {
     id: 3,
-    name: '2025春季校园音乐节',
-    time: '2025.05.01',
-    location: '中央广场',
+    name: "2025春季校园音乐节",
+    time: "2025.05.01",
+    location: "中央广场",
     participants: 768,
-    image: 'https://via.placeholder.com/400x250/ff6b6b/ffffff?text=校园音乐节'
+    image: "https://via.placeholder.com/400x250/ff6b6b/ffffff?text=校园音乐节",
   },
   {
     id: 4,
-    name: '创新创业大赛',
-    time: '2025.05.20',
-    location: '创业中心',
+    name: "创新创业大赛",
+    time: "2025.05.20",
+    location: "创业中心",
     participants: 256,
-    image: 'https://via.placeholder.com/400x250/a7e8e2/333333?text=创新创业大赛'
+    image:
+      "https://via.placeholder.com/400x250/a7e8e2/333333?text=创新创业大赛",
   },
   {
     id: 5,
-    name: '环保志愿者招募',
-    time: '2025.06.05',
-    location: '生态公园',
+    name: "环保志愿者招募",
+    time: "2025.06.05",
+    location: "生态公园",
     participants: 128,
-    image: 'https://via.placeholder.com/400x250/b8d8f5/333333?text=环保志愿者招募'
+    image:
+      "https://via.placeholder.com/400x250/b8d8f5/333333?text=环保志愿者招募",
   },
   {
     id: 6,
-    name: '摄影艺术展',
-    time: '2025.06.15',
-    location: '艺术中心',
+    name: "摄影艺术展",
+    time: "2025.06.15",
+    location: "艺术中心",
     participants: 384,
-    image: 'https://via.placeholder.com/400x250/5edfd7/ffffff?text=摄影艺术展'
+    image: "https://via.placeholder.com/400x250/5edfd7/ffffff?text=摄影艺术展",
   },
   {
     id: 7,
-    name: '国际文化交流周',
-    time: '2025.07.01',
-    location: '国际会议中心',
+    name: "国际文化交流周",
+    time: "2025.07.01",
+    location: "国际会议中心",
     participants: 512,
-    image: 'https://via.placeholder.com/400x250/7fc1f4/ffffff?text=文化交流周'
+    image: "https://via.placeholder.com/400x250/7fc1f4/ffffff?text=文化交流周",
   },
   {
     id: 8,
-    name: '夏季运动会',
-    time: '2025.07.15',
-    location: '体育场',
+    name: "夏季运动会",
+    time: "2025.07.15",
+    location: "体育场",
     participants: 896,
-    image: 'https://via.placeholder.com/400x250/ff9f7f/ffffff?text=夏季运动会'
-  }
+    image: "https://via.placeholder.com/400x250/ff9f7f/ffffff?text=夏季运动会",
+  },
 ]);
 
 // 推荐活动数据
 const recommendedActivities = ref([
   {
     id: 101,
-    name: '全球创新科技展',
-    time: '2025.08.10',
-    location: '科技馆',
-    reason: '热门活动',
-    image: 'https://via.placeholder.com/400x250/4ecdc4/ffffff?text=创新科技展'
+    name: "全球创新科技展",
+    time: "2025.08.10",
+    location: "科技馆",
+    reason: "热门活动",
+    image: "https://via.placeholder.com/400x250/4ecdc4/ffffff?text=创新科技展",
   },
   {
     id: 102,
-    name: '青年创业论坛',
-    time: '2025.08.20',
-    location: '创业中心',
-    reason: '根据您的兴趣推荐',
-    image: 'https://via.placeholder.com/400x250/6cb2eb/ffffff?text=创业论坛'
+    name: "青年创业论坛",
+    time: "2025.08.20",
+    location: "创业中心",
+    reason: "根据您的兴趣推荐",
+    image: "https://via.placeholder.com/400x250/6cb2eb/ffffff?text=创业论坛",
   },
   {
     id: 103,
-    name: '国际电影节',
-    time: '2025.09.01',
-    location: '艺术中心',
-    reason: '热门活动',
-    image: 'https://via.placeholder.com/400x250/ff6b6b/ffffff?text=国际电影节'
+    name: "国际电影节",
+    time: "2025.09.01",
+    location: "艺术中心",
+    reason: "热门活动",
+    image: "https://via.placeholder.com/400x250/ff6b6b/ffffff?text=国际电影节",
   },
   {
     id: 104,
-    name: '人工智能大会',
-    time: '2025.09.15',
-    location: '国际会议中心',
-    reason: '热门活动',
-    image: 'https://via.placeholder.com/400x250/a7e8e2/333333?text=AI大会'
-  }
+    name: "人工智能大会",
+    time: "2025.09.15",
+    location: "国际会议中心",
+    reason: "热门活动",
+    image: "https://via.placeholder.com/400x250/a7e8e2/333333?text=AI大会",
+  },
 ]);
 
 // 查看活动详情
 const viewDetails = (activityId) => {
   // 跳转到活动详情页
-  console.log('查看活动详情:', activityId);
+  console.log("查看活动详情:", activityId);
 };
 
 // 根据分类筛选活动
 const filterByCategory = (category) => {
   // 跳转到活动列表页并筛选对应分类的活动
-  console.log('筛选分类:', category);
+  console.log("筛选分类:", category);
 };
 </script>
 
@@ -239,7 +279,7 @@ const filterByCategory = (category) => {
   .carousel {
     height: 400px;
   }
-  
+
   .carousel :deep(.el-carousel__container) {
     height: 400px !important;
   }
@@ -252,14 +292,18 @@ const filterByCategory = (category) => {
 }
 
 .section-title:after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(
+    to right,
+    var(--color-primary),
+    var(--color-secondary)
+  );
   border-radius: 2px;
 }
 
@@ -334,7 +378,8 @@ const filterByCategory = (category) => {
   line-height: 1.3;
 }
 
-.activity-location, .activity-participants {
+.activity-location,
+.activity-participants {
   color: var(--color-text-light);
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
@@ -342,7 +387,8 @@ const filterByCategory = (category) => {
   align-items: center;
 }
 
-.activity-location .el-icon, .activity-participants .el-icon {
+.activity-location .el-icon,
+.activity-participants .el-icon {
   margin-right: 0.5rem;
   color: var(--color-primary);
 }
@@ -369,8 +415,6 @@ const filterByCategory = (category) => {
     height: 180px;
   }
 }
-
-
 
 /* 推荐活动样式 */
 .recommended-activities {
