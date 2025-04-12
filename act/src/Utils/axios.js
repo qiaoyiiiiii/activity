@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 // 定义基础 URL，如果需要的话
-const baseURL = 'https://47.106.74.196';
+const baseURL = "https://47.106.74.196";
 
 // 创建 Axios 实例
 const instance = axios.create({
@@ -13,9 +13,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-      config.headers['Authorization'] = token; // 将 token 添加到请求头
+      config.headers["Authorization"] = token; // 将 token 添加到请求头
     }
     return config;
   },
@@ -29,7 +29,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => {
     // 对响应数据做点什么
-    return response.data; // 通常我们只需要响应体中的数据
+    return response; // 通常我们只需要响应体中的数据
   },
   (error) => {
     // 处理响应错误
@@ -45,7 +45,15 @@ const request = {
   delete: (url, config) => instance.delete(url, config),
 };
 
-export default request;
+// 创建插件
+const axiosPlugin = {
+  install(app) {
+    app.config.globalProperties.$request = request;
+  }
+};
+
+// 导出 request 和插件
+export { request as default, axiosPlugin };
 
 // 如何使用：
 // import request from './request';

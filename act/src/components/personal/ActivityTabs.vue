@@ -4,16 +4,16 @@
       <template #header>
         <div class="card-header">
           <h2>我的活动</h2>
-          <el-button 
-            type="primary" 
-            size="small" 
+          <el-button
+            type="primary"
+            size="small"
             @click="$router.push('/create')"
           >
             创建活动
           </el-button>
         </div>
       </template>
-      
+
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
         <!-- 创建的活动 -->
         <el-tab-pane label="创建的活动" name="created">
@@ -27,9 +27,9 @@
                 @clear="handleCreatedSearch"
                 @input="handleCreatedSearch"
               />
-              <el-select 
-                v-model="createdStatusFilter" 
-                placeholder="活动状态" 
+              <el-select
+                v-model="createdStatusFilter"
+                placeholder="活动状态"
                 clearable
                 @change="handleCreatedSearch"
               >
@@ -38,11 +38,14 @@
                 <el-option label="已结束" value="completed" />
               </el-select>
             </div>
-            
-            <div v-if="filteredCreatedActivities.length === 0" class="empty-state">
+
+            <div
+              v-if="filteredCreatedActivities.length === 0"
+              class="empty-state"
+            >
               <el-empty description="暂无创建的活动" />
             </div>
-            
+
             <div v-else class="activity-list">
               <activity-card
                 v-for="activity in filteredCreatedActivities"
@@ -56,7 +59,7 @@
             </div>
           </div>
         </el-tab-pane>
-        
+
         <!-- 参加的活动 -->
         <el-tab-pane label="参加的活动" name="participated">
           <div class="tab-content">
@@ -69,9 +72,9 @@
                 @clear="handleParticipatedSearch"
                 @input="handleParticipatedSearch"
               />
-              <el-select 
-                v-model="participatedStatusFilter" 
-                placeholder="活动状态" 
+              <el-select
+                v-model="participatedStatusFilter"
+                placeholder="活动状态"
                 clearable
                 @change="handleParticipatedSearch"
               >
@@ -80,11 +83,14 @@
                 <el-option label="已结束" value="completed" />
               </el-select>
             </div>
-            
-            <div v-if="filteredParticipatedActivities.length === 0" class="empty-state">
+
+            <div
+              v-if="filteredParticipatedActivities.length === 0"
+              class="empty-state"
+            >
               <el-empty description="暂无参加的活动" />
             </div>
-            
+
             <div v-else class="activity-list">
               <activity-card
                 v-for="activity in filteredParticipatedActivities"
@@ -99,14 +105,12 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
-    
+
     <!-- 删除活动确认对话框 -->
-    <el-dialog
-      v-model="deleteDialogVisible"
-      title="确认删除"
-      width="30%"
-    >
-      <span>确定要删除活动"{{ currentActivity?.title }}"吗？此操作不可恢复。</span>
+    <el-dialog v-model="deleteDialogVisible" title="确认删除" width="30%">
+      <span
+        >确定要删除活动"{{ currentActivity?.title }}"吗？此操作不可恢复。</span
+      >
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="deleteDialogVisible = false">取消</el-button>
@@ -116,18 +120,18 @@
         </span>
       </template>
     </el-dialog>
-    
+
     <!-- 取消参与确认对话框 -->
-    <el-dialog
-      v-model="cancelDialogVisible"
-      title="确认取消参与"
-      width="30%"
-    >
+    <el-dialog v-model="cancelDialogVisible" title="确认取消参与" width="30%">
       <span>确定要取消参与活动"{{ currentActivity?.title }}"吗？</span>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="cancelDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="cancelParticipation" :loading="loading">
+          <el-button
+            type="primary"
+            @click="cancelParticipation"
+            :loading="loading"
+          >
             确认取消
           </el-button>
         </span>
@@ -137,10 +141,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import ActivityCard from './ActivityCard.vue';
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import ActivityCard from "./ActivityCard.vue";
 
 // 路由
 const router = useRouter();
@@ -149,25 +153,25 @@ const router = useRouter();
 const props = defineProps({
   createdActivities: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   participatedActivities: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 });
 
 // 定义事件
-const emit = defineEmits(['refresh']);
+const emit = defineEmits(["refresh", "tab-change"]);
 
 // 当前活动标签
-const activeTab = ref('created');
+const activeTab = ref("created");
 
 // 搜索和筛选
-const createdSearchText = ref('');
-const createdStatusFilter = ref('');
-const participatedSearchText = ref('');
-const participatedStatusFilter = ref('');
+const createdSearchText = ref("");
+const createdStatusFilter = ref("");
+const participatedSearchText = ref("");
+const participatedStatusFilter = ref("");
 
 // 对话框状态
 const deleteDialogVisible = ref(false);
@@ -177,47 +181,64 @@ const currentActivity = ref(null);
 
 // 过滤后的创建活动列表
 const filteredCreatedActivities = computed(() => {
-  return props.createdActivities.filter(activity => {
+  return props.createdActivities.filter((activity) => {
     // 标题搜索
-    const titleMatch = !createdSearchText.value || 
-      activity.title.toLowerCase().includes(createdSearchText.value.toLowerCase());
-    
+    const titleMatch =
+      !createdSearchText.value ||
+      activity.title
+        .toLowerCase()
+        .includes(createdSearchText.value.toLowerCase());
+
     // 状态筛选
-    const statusMatch = !createdStatusFilter.value || 
+    const statusMatch =
+      !createdStatusFilter.value ||
       activity.status === createdStatusFilter.value;
-    
+
     return titleMatch && statusMatch;
   });
 });
 
 // 过滤后的参与活动列表
 const filteredParticipatedActivities = computed(() => {
-  return props.participatedActivities.filter(activity => {
+  return props.participatedActivities.filter((activity) => {
     // 标题搜索
-    const titleMatch = !participatedSearchText.value || 
-      activity.title.toLowerCase().includes(participatedSearchText.value.toLowerCase());
-    
+    const titleMatch =
+      !participatedSearchText.value ||
+      activity.title
+        .toLowerCase()
+        .includes(participatedSearchText.value.toLowerCase());
+
     // 状态筛选
-    const statusMatch = !participatedStatusFilter.value || 
+    const statusMatch =
+      !participatedStatusFilter.value ||
       activity.status === participatedStatusFilter.value;
-    
+
     return titleMatch && statusMatch;
   });
 });
 
 // 处理标签切换
 const handleTabClick = (tab) => {
-  console.log('切换到标签:', tab.props.name);
+  console.log("切换到标签:", tab.props.name);
+  emit("tab-change", tab.props.name);
 };
 
 // 处理创建活动搜索
 const handleCreatedSearch = () => {
-  console.log('搜索创建的活动:', createdSearchText.value, createdStatusFilter.value);
+  console.log(
+    "搜索创建的活动:",
+    createdSearchText.value,
+    createdStatusFilter.value
+  );
 };
 
 // 处理参与活动搜索
 const handleParticipatedSearch = () => {
-  console.log('搜索参与的活动:', participatedSearchText.value, participatedStatusFilter.value);
+  console.log(
+    "搜索参与的活动:",
+    participatedSearchText.value,
+    participatedStatusFilter.value
+  );
 };
 
 // 查看活动详情
@@ -228,8 +249,8 @@ const viewActivity = (activity) => {
 // 编辑活动
 const editActivity = (activity) => {
   router.push({
-    path: '/create',
-    query: { id: activity.id, edit: true }
+    path: "/create",
+    query: { id: activity.id, edit: true },
   });
 };
 
@@ -242,22 +263,22 @@ const confirmDeleteActivity = (activity) => {
 // 删除活动
 const deleteActivity = async () => {
   if (!currentActivity.value) return;
-  
+
   loading.value = true;
-  
+
   try {
     // 在实际项目中，这里应该调用API删除活动
     // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
     ElMessage.success(`活动"${currentActivity.value.title}"已删除`);
     deleteDialogVisible.value = false;
-    
+
     // 刷新活动列表
-    emit('refresh');
+    emit("refresh");
   } catch (error) {
-    ElMessage.error('删除失败，请重试');
-    console.error('删除活动失败:', error);
+    ElMessage.error("删除失败，请重试");
+    console.error("删除活动失败:", error);
   } finally {
     loading.value = false;
   }
@@ -272,22 +293,22 @@ const confirmCancelParticipation = (activity) => {
 // 取消参与活动
 const cancelParticipation = async () => {
   if (!currentActivity.value) return;
-  
+
   loading.value = true;
-  
+
   try {
     // 在实际项目中，这里应该调用API取消参与
     // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
     ElMessage.success(`已取消参与活动"${currentActivity.value.title}"`);
     cancelDialogVisible.value = false;
-    
+
     // 刷新活动列表
-    emit('refresh');
+    emit("refresh");
   } catch (error) {
-    ElMessage.error('操作失败，请重试');
-    console.error('取消参与活动失败:', error);
+    ElMessage.error("操作失败，请重试");
+    console.error("取消参与活动失败:", error);
   } finally {
     loading.value = false;
   }
@@ -336,7 +357,7 @@ const cancelParticipation = async () => {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .activity-list {
     grid-template-columns: 1fr;
   }

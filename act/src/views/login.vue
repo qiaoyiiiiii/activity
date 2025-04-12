@@ -20,8 +20,10 @@
         <div class="logo-container">
           <logo />
         </div>
-        <h2 class="auth-title">{{ isLogin ? '欢迎回来' : '创建新账号' }}</h2>
-        <p class="auth-subtitle">{{ isLogin ? '登录您的账号以继续' : '填写以下信息以创建您的账号' }}</p>
+        <h2 class="auth-title">{{ isLogin ? "欢迎回来" : "创建新账号" }}</h2>
+        <p class="auth-subtitle">
+          {{ isLogin ? "登录您的账号以继续" : "填写以下信息以创建您的账号" }}
+        </p>
       </div>
 
       <!-- 登录表单 -->
@@ -53,7 +55,7 @@
 
         <div class="form-options">
           <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
-          <el-button type="text" class="forgot-password">忘记密码?</el-button>
+          <el-link type="primary" :underline="false">忘记密码</el-link>
         </div>
 
         <el-button
@@ -67,7 +69,9 @@
 
         <div class="auth-switch">
           <span>还没有账号?</span>
-          <el-button type="text" @click="switchMode">去注册</el-button>
+          <el-link type="primary" :underline="false" @click="isLogin = !isLogin"
+            >去注册</el-link
+          >
         </div>
       </el-form>
 
@@ -109,9 +113,21 @@
         </el-form-item>
 
         <el-form-item prop="agreement">
-          <el-checkbox v-model="registerForm.agreement">
-            我已阅读并同意 <el-button type="text" class="terms-link">服务条款</el-button> 和 <el-button type="text" class="terms-link">隐私政策</el-button>
-          </el-checkbox>
+          <el-checkbox v-model="registerForm.agreement"></el-checkbox>
+          我已阅读并同意
+          <el-link
+            type="primary"
+            @click="handlePolicy('terms_of_service')"
+            :underline="false"
+            >服务条款</el-link
+          >
+          和
+          <el-link
+            type="primary"
+            @click="handlePolicy('privacy_policy')"
+            :underline="false"
+            >隐私政策</el-link
+          >
         </el-form-item>
 
         <el-button
@@ -125,48 +141,69 @@
 
         <div class="auth-switch">
           <span>已有账号?</span>
-          <el-button type="text" @click="switchMode">去登录</el-button>
+          <el-link type="primary" :underline="false" @click="isLogin = !isLogin"
+            >去登录</el-link
+          >
         </div>
       </el-form>
     </div>
+    <Dialog :title="dialogTitle" :dialogVisible="dialogVisible" width="50%">
+      <div class="policy-container">
+        <div
+          v-for="section in sectionGroup.sections"
+          :key="section"
+          class="section"
+        >
+          <h3>{{ section.title }}</h3>
+          <p>{{ section.content }}</p>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import logo from '../components/logo.vue';
-import { Calendar, User, Location, Star, Message, Lock } from '@element-plus/icons-vue';
+import { ref, reactive, getCurrentInstance } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import logo from "../components/logo.vue";
+import Dialog from "../components/dialog.vue";
+import policy from "../static/policy.json";
 
 const router = useRouter();
+const { proxy } = getCurrentInstance();
+
 const isLogin = ref(true);
 const loading = ref(false);
 const loginFormRef = ref(null);
 const registerFormRef = ref(null);
+// 政策
+const sectionGroup = ref(null);
+const dialogVisible = ref(false);
+const dialogTitle = ref("");
 
 // 登录表单数据
 const loginForm = reactive({
-  email: '',
-  password: '',
-  remember: false
+  email: "",
+  password: "",
+  remember: false,
 });
 
 // 注册表单数据
 const registerForm = reactive({
-  email: '',
-  password: '',
-  confirmPassword: '',
-  agreement: false
+  email: "",
+  password: "",
+  confirmPassword: "",
+  agreement: false,
 });
 
 // 验证邮箱格式
 const validateEmail = (rule, value, callback) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!value) {
-    callback(new Error('请输入邮箱地址'));
+    callback(new Error("请输入邮箱地址"));
   } else if (!emailRegex.test(value)) {
-    callback(new Error('请输入有效的邮箱地址'));
+    callback(new Error("请输入有效的邮箱地址"));
   } else {
     callback();
   }
@@ -175,9 +212,9 @@ const validateEmail = (rule, value, callback) => {
 // 验证密码强度
 const validatePassword = (rule, value, callback) => {
   if (!value) {
-    callback(new Error('请输入密码'));
+    callback(new Error("请输入密码"));
   } else if (value.length < 6) {
-    callback(new Error('密码长度不能少于6个字符'));
+    callback(new Error("密码长度不能少于6个字符"));
   } else {
     callback();
   }
@@ -186,9 +223,9 @@ const validatePassword = (rule, value, callback) => {
 // 验证确认密码
 const validateConfirmPassword = (rule, value, callback) => {
   if (!value) {
-    callback(new Error('请确认密码'));
+    callback(new Error("请确认密码"));
   } else if (value !== registerForm.password) {
-    callback(new Error('两次输入的密码不一致'));
+    callback(new Error("两次输入的密码不一致"));
   } else {
     callback();
   }
@@ -197,7 +234,7 @@ const validateConfirmPassword = (rule, value, callback) => {
 // 验证协议同意
 const validateAgreement = (rule, value, callback) => {
   if (!value) {
-    callback(new Error('请阅读并同意服务条款和隐私政策'));
+    callback(new Error("请阅读并同意服务条款和隐私政策"));
   } else {
     callback();
   }
@@ -205,21 +242,23 @@ const validateAgreement = (rule, value, callback) => {
 
 // 登录表单验证规则
 const loginRules = {
-  email: [{ validator: validateEmail, trigger: 'blur' }],
-  password: [{ validator: validatePassword, trigger: 'blur' }]
+  email: [{ validator: validateEmail, trigger: "blur" }],
+  password: [{ validator: validatePassword, trigger: "blur" }],
 };
 
 // 注册表单验证规则
 const registerRules = {
-  email: [{ validator: validateEmail, trigger: 'blur' }],
-  password: [{ validator: validatePassword, trigger: 'blur' }],
-  confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
-  agreement: [{ validator: validateAgreement, trigger: 'change' }]
+  email: [{ validator: validateEmail, trigger: "blur" }],
+  password: [{ validator: validatePassword, trigger: "blur" }],
+  confirmPassword: [{ validator: validateConfirmPassword, trigger: "blur" }],
+  agreement: [{ validator: validateAgreement, trigger: "change" }],
 };
 
-// 切换登录/注册模式
-const switchMode = () => {
-  isLogin.value = !isLogin.value;
+//展示政策
+const handlePolicy = (section) => {
+  dialogTitle.value = policy[section].title;
+  sectionGroup.value = policy[section];
+  dialogVisible.value = true;
 };
 
 // 处理登录
@@ -229,28 +268,23 @@ const handleLogin = async () => {
   await loginFormRef.value.validate(async (valid) => {
     if (valid) {
       loading.value = true;
-      try {
-        // 这里应该调用实际的登录API
-        // 模拟登录成功
-        setTimeout(() => {
-          const userData = {
-            email: loginForm.email,
-            name: loginForm.email.split('@')[0],
-            avatar: 'https://via.placeholder.com/150',
-            isLoggedIn: true
-          };
-
-          // 保存用户信息到本地存储
-          localStorage.setItem('user', JSON.stringify(userData));
-
-          ElMessage.success('登录成功');
-          router.push('/');
+      const params = {
+        username: loginForm.email,
+        password: loginForm.password,
+      };
+      proxy.$request
+        .post("/api/auth/login", params)
+        .then((res) => {
+          localStorage.setItem("token", JSON.stringify(res.data.token));
+          localStorage.setItem("userid", JSON.stringify(res.data.id));
+          ElMessage.success("登录成功");
+          router.push("/");
           loading.value = false;
-        }, 1000);
-      } catch (error) {
-        ElMessage.error('登录失败，请检查您的凭据');
-        loading.value = false;
-      }
+        })
+        .catch((error) => {
+          ElMessage.error("登录失败，邮箱或密码输入错误!");
+          loading.value = false;
+        });
     }
   });
 };
@@ -259,35 +293,36 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   if (!registerFormRef.value) return;
 
-  await registerFormRef.value.validate(async (valid) => {
+  registerFormRef.value.validate((valid) => {
     if (valid) {
       loading.value = true;
-      try {
-        // 这里应该调用实际的注册API
-        // 模拟注册成功
-        setTimeout(() => {
-          const userData = {
-            email: registerForm.email,
-            name: registerForm.email.split('@')[0],
-            avatar: 'https://via.placeholder.com/150',
-            isLoggedIn: true,
-            isNewUser: true
-          };
-
-          // 保存用户信息到本地存储
-          localStorage.setItem('user', JSON.stringify(userData));
-
-          ElMessage.success('注册成功，请完善您的个人信息');
-          router.push('/personal');
+      const encryptedPassword = CryptoJS.AES.encrypt(registerForm.password, 'YourSecretKey').toString();
+      const userdata = {
+        username: registerForm.email,
+        password: encryptedPassword,
+        nickname: '',
+        interests: [],
+        description: '',
+      };
+      proxy.$request
+        .post("/api/auth/register", userdata)
+        .then((res) => {
+          if(res.data.code === 200){
+            localStorage.setItem("id", res.data.id);
+            ElMessage.success("注册成功");
+            router.push('/registerinfo');
+          }
+        })
+        .catch((error) => { 
+          ElMessage.error("注册失败");
+        })
+        .finally(() => {
           loading.value = false;
-        }, 1000);
-      } catch (error) {
-        ElMessage.error('注册失败，请稍后再试');
-        loading.value = false;
-      }
+        });
     }
   });
 };
+
 </script>
 
 <style scoped>
@@ -309,7 +344,11 @@ const handleRegister = async () => {
 
 .auth-illustration {
   flex: 1;
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-secondary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-light) 0%,
+    var(--color-secondary-light) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -394,10 +433,6 @@ const handleRegister = async () => {
   margin-bottom: 1.5rem;
 }
 
-.forgot-password {
-  font-size: 0.9rem;
-}
-
 .submit-button {
   width: 100%;
   padding: 0.75rem;
@@ -421,7 +456,8 @@ const handleRegister = async () => {
     flex-direction: column-reverse;
   }
 
-  .auth-card, .auth-illustration {
+  .auth-card,
+  .auth-illustration {
     max-width: 100%;
   }
 
@@ -463,6 +499,14 @@ const handleRegister = async () => {
   .activity-icons .icon {
     font-size: 1.5rem;
     padding: 0.5rem;
+  }
+
+  .policy-container {
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .section {
+    margin-bottom: 20px;
   }
 }
 </style>

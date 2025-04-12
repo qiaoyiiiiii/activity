@@ -32,6 +32,10 @@ const router = createRouter({
       // meta: { requiresAuth: true }
     },
     {
+      path: '/registerinfo',
+      component: () => import('../components/personal.vue')
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: () => import('../views/NotFound.vue')
