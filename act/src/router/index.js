@@ -12,6 +12,9 @@ const router=createRouter({
       path:'/activity',component:()=>import('../views/activity.vue')
     },
     {
+      path:'/activity/:id',component:()=>import('../views/detail.vue')
+    },
+    {
       path:'/create',component:()=>import('../views/create.vue')
     },
     {

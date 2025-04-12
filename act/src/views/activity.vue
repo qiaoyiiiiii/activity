@@ -30,8 +30,8 @@
     </div>
     <div class="activity-container" v-else>
       <el-card
-        v-for="(dept, index) in activity"
-        :key="index"
+        v-for="dept in activity"
+        :key="dept.id"
         class="activity-card"
       >
         <div class="card-content">
@@ -51,7 +51,7 @@
             <h2 class="activity-title">{{ dept.title }}</h2>
             <p class="activity-description">{{ dept.description }}</p>
 
-            <el-button class="learn-more-btn" size="small" round>
+            <el-button class="learn-more-btn" size="small" round @click="goDetail(dept)">
               了解更多>
             </el-button>
           </div>
@@ -76,11 +76,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, getCurrentInstance } from "vue";
 import { Search } from "@element-plus/icons-vue";
 
 const currentPage = ref(1);
 const pageSize = ref(6);
+const proxy=getCurrentInstance().proxy;
 
 // 分页数据计算属性
 const currentPageData = computed(() => {
@@ -101,6 +102,7 @@ const handleCurrentChange = (val) => {
 
 const activity = ref([
   {
+    id: 1,
     title: "体育科学学院: 跃动青春，理琢学海之韵",
     description:
       "体育科学学院成立于2018年4月，其前身体育教育中心成立于2015年5月。体育科学学院现设有体育教育专业、休闲...",
@@ -109,6 +111,7 @@ const activity = ref([
     monthYear: "2024-06",
   },
   {
+    id: 2,
     title: "健康学院: 乘南粤湾区发展大势 育健康中国未来人才",
     description:
       "健康学院于2017年6月揭牌成立，是我校重点建设的新医科学院。学院下设健康管理系和护理学系共4个教研...",
@@ -126,6 +129,10 @@ const formData = ref({
   title: "",
   category: "综合排序",
 });
+
+const goDetail = (dept) => {
+    proxy.$router.push(`/activity/${dept.id}`);
+};
 </script>
 <style scoped>
 /* 搜索区域样式 */
