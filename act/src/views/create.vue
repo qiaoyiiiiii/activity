@@ -139,7 +139,7 @@ import { Plus } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import categories from "../static/category.js";
 import Dialog from "../components/dialog.vue";
-import Markdown from "../components/markdown_new.vue";
+import Markdown from "../components/markdown.vue";
 
 const formData = ref({
   title: "",

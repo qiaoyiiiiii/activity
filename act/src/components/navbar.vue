@@ -38,7 +38,7 @@
                 v-if="$route.path !== '/personal'"
                 >个人中心</el-button
               >
-              <el-button @click="$router.push('/login')">退出登录</el-button>
+              <el-button @click="handleLogout">退出登录</el-button>
             </div>
           </template>
         </el-popover>
@@ -62,6 +62,7 @@ import { ref } from "vue";
 import { onMounted } from "vue";
 import logo from "./logo.vue";
 import { ElAvatar, ElButton } from "element-plus";
+import { logout } from '../Utils/auth';
 
 const user = ref(null);
 
@@ -71,6 +72,10 @@ onMounted(() => {
     console.log(user.value);
   }
 });
+
+const handleLogout = () => {
+  logout();
+};
 </script>
 
 <style scoped>

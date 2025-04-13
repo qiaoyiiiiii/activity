@@ -1,26 +1,37 @@
 import axios from "axios";
+import { ElMessage } from 'element-plus';
 
-// 定义基础 URL，如果需要的话
-const baseURL = "https://47.106.74.196";
+// 定义基础 URL
+const baseURL = "http://47.106.74.196";
 
 // 创建 Axios 实例
 const instance = axios.create({
   baseURL: baseURL,
-  timeout: 10000, // 请求超时时间，单位为毫秒
+  timeout: 10000, // 请求超时时间
+  withCredentials: true, // 允许跨域请求携带凭证
+  headers: {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Max-Age': '3600'
+  }
 });
 
 // 添加请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    // 在发送请求之前做些什么
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers["Authorization"] = token; // 将 token 添加到请求头
+    // 获取原始token字符串
+    const tokenStr = localStorage.getItem("token");
+    if (tokenStr) {
+      // 移除引号，因为localStorage存储时可能带有引号
+      const token = tokenStr.replace(/^"(.*)"$/, '$1');
+      // 设置Authorization头
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => {
-    // 处理请求错误
     return Promise.reject(error);
   }
 );
@@ -28,16 +39,39 @@ instance.interceptors.request.use(
 // 添加响应拦截器
 instance.interceptors.response.use(
   (response) => {
-    // 对响应数据做点什么
-    return response; // 通常我们只需要响应体中的数据
+    return response;
   },
   (error) => {
-    // 处理响应错误
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          // 未授权，清除 token 并跳转到登录页
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          break;
+        case 403:
+          // 禁止访问
+          ElMessage.error('没有权限访问该资源');
+          break;
+        case 500:
+          // 服务器错误
+          ElMessage.error('服务器错误，请稍后重试');
+          break;
+        default:
+          ElMessage.error(error.response.data.message || '请求失败');
+      }
+    } else if (error.request) {
+      // 请求发出但未收到响应
+      ElMessage.error('网络错误，请检查您的网络连接');
+    } else {
+      // 请求配置出错
+      ElMessage.error('请求配置错误');
+    }
     return Promise.reject(error);
   }
 );
 
-// 封装常用的请求方法
+// 封装请求方法
 const request = {
   get: (url, params, config) => instance.get(url, { params, ...config }),
   post: (url, data, config) => instance.post(url, data, config),
@@ -52,20 +86,4 @@ const axiosPlugin = {
   }
 };
 
-// 导出 request 和插件
-export { request as default, axiosPlugin };
-
-// 如何使用：
-// import request from './request';
-
-// request.get('/users').then(data => {
-//   console.log(data);
-// }).catch(error => {
-//   console.error(error);
-// });
-
-// request.post('/users', { name: 'John Doe' }).then(data => {
-//   console.log(data);
-// }).catch(error => {
-//   console.error(error);
 // });

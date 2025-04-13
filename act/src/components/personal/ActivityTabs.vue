@@ -103,6 +103,50 @@
             </div>
           </div>
         </el-tab-pane>
+
+        <!-- 收藏的活动 -->
+        <el-tab-pane label="收藏的活动" name="favorites">
+          <div class="tab-content">
+            <div class="filter-bar">
+              <el-input
+                v-model="favoritesSearchText"
+                placeholder="搜索活动"
+                prefix-icon="Search"
+                clearable
+                @clear="handleFavoritesSearch"
+                @input="handleFavoritesSearch"
+              />
+              <el-select
+                v-model="favoritesStatusFilter"
+                placeholder="活动状态"
+                clearable
+                @change="handleFavoritesSearch"
+              >
+                <el-option label="进行中" value="active" />
+                <el-option label="即将开始" value="upcoming" />
+                <el-option label="已结束" value="completed" />
+              </el-select>
+            </div>
+
+            <div
+              v-if="filteredFavoriteActivities.length === 0"
+              class="empty-state"
+            >
+              <el-empty description="暂无收藏的活动" />
+            </div>
+
+            <div v-else class="activity-list">
+              <activity-card
+                v-for="activity in filteredFavoriteActivities"
+                :key="activity.id"
+                :activity="activity"
+                type="favorite"
+                @view="viewActivity"
+                @cancel-favorite="confirmCancelFavorite"
+              />
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -137,6 +181,25 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 取消收藏确认对话框 -->
+    <el-dialog
+      v-model="cancelFavoriteDialogVisible"
+      title="取消收藏"
+      width="30%"
+    >
+      <span>确定要取消收藏活动"{{ currentActivity?.title }}"吗？</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelFavoriteDialogVisible = false"
+            >取消</el-button
+          >
+          <el-button type="primary" @click="cancelFavorite" :loading="loading">
+            确认取消
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -159,6 +222,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  favoriteActivities: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 // 定义事件
@@ -172,10 +239,13 @@ const createdSearchText = ref("");
 const createdStatusFilter = ref("");
 const participatedSearchText = ref("");
 const participatedStatusFilter = ref("");
+const favoritesSearchText = ref("");
+const favoritesStatusFilter = ref("");
 
 // 对话框状态
 const deleteDialogVisible = ref(false);
 const cancelDialogVisible = ref(false);
+const cancelFavoriteDialogVisible = ref(false);
 const loading = ref(false);
 const currentActivity = ref(null);
 
@@ -217,6 +287,25 @@ const filteredParticipatedActivities = computed(() => {
   });
 });
 
+// 过滤后的收藏活动列表
+const filteredFavoriteActivities = computed(() => {
+  return props.favoriteActivities.filter((activity) => {
+    // 标题搜索
+    const titleMatch =
+      !favoritesSearchText.value ||
+      activity.title
+        .toLowerCase()
+        .includes(favoritesSearchText.value.toLowerCase());
+
+    // 状态筛选
+    const statusMatch =
+      !favoritesStatusFilter.value ||
+      activity.status === favoritesStatusFilter.value;
+
+    return titleMatch && statusMatch;
+  });
+});
+
 // 处理标签切换
 const handleTabClick = (tab) => {
   console.log("切换到标签:", tab.props.name);
@@ -238,6 +327,15 @@ const handleParticipatedSearch = () => {
     "搜索参与的活动:",
     participatedSearchText.value,
     participatedStatusFilter.value
+  );
+};
+
+// 处理收藏活动搜索
+const handleFavoritesSearch = () => {
+  console.log(
+    "搜索收藏的活动:",
+    favoritesSearchText.value,
+    favoritesStatusFilter.value
   );
 };
 
@@ -309,6 +407,36 @@ const cancelParticipation = async () => {
   } catch (error) {
     ElMessage.error("操作失败，请重试");
     console.error("取消参与活动失败:", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 确认取消收藏活动
+const confirmCancelFavorite = (activity) => {
+  currentActivity.value = activity;
+  cancelFavoriteDialogVisible.value = true;
+};
+
+// 取消收藏活动
+const cancelFavorite = async () => {
+  if (!currentActivity.value) return;
+
+  loading.value = true;
+
+  try {
+    // 在实际项目中，这里应该调用API取消收藏
+    // 模拟API调用延迟
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    ElMessage.success(`已取消收藏活动"${currentActivity.value.title}"`);
+    cancelFavoriteDialogVisible.value = false;
+
+    // 刷新活动列表
+    emit("refresh");
+  } catch (error) {
+    ElMessage.error("操作失败，请重试");
+    console.error("取消收藏活动失败:", error);
   } finally {
     loading.value = false;
   }

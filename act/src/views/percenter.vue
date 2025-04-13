@@ -11,6 +11,7 @@
         <activity-tabs
           :created-activities="createdActivities"
           :participated-activities="participatedActivities"
+          :favorite-activities="favoriteActivities"
           @refresh="handleRefresh"
           @tab-change="handleTabChange"
         />
@@ -51,9 +52,10 @@ const total = ref(0);
 // 用户信息
 const user = ref(null);
 
-// 创建的活动和参与的活动
+// 创建的活动、参与的活动和收藏的活动
 const createdActivities = ref([]);
 const participatedActivities = ref([]);
+const favoriteActivities = ref([]);
 
 // 处理标签切换
 const handleTabChange = (tab) => {
@@ -114,6 +116,19 @@ const fetchActivities = () => {
       })
       .catch((error) => {
         ElMessage.error("获取参加的活动失败");
+        console.error(error);
+      });
+  } else if (activeTab.value === "favorites") {
+    proxy.$request
+      .get("/api/activities/my-favorites", { params })
+      .then((res) => {
+        if (res.data.code === 200) {
+          favoriteActivities.value = res.data.favorites || [];
+          total.value = res.data.totalSize || 0;
+        }
+      })
+      .catch((error) => {
+        ElMessage.error("获取收藏的活动失败");
         console.error(error);
       });
   }

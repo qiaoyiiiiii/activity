@@ -169,6 +169,7 @@ import { ElMessage } from "element-plus";
 import logo from "../components/logo.vue";
 import Dialog from "../components/dialog.vue";
 import policy from "../static/policy.json";
+import CryptoJS from 'crypto-js';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -275,8 +276,9 @@ const handleLogin = async () => {
       proxy.$request
         .post("/api/auth/login", params)
         .then((res) => {
-          localStorage.setItem("token", JSON.stringify(res.data.token));
-          localStorage.setItem("userid", JSON.stringify(res.data.id));
+          // 直接存储token字符串，不要用JSON.stringify
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("userid", res.data.id);
           ElMessage.success("登录成功");
           router.push("/");
           loading.value = false;
