@@ -4,9 +4,9 @@ import "element-plus/dist/index.css";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "./router/index"; // 确保导入router
-import auth from "./Utils/auth";
-import { axiosPlugin } from "./Utils/axios"; // 修改这行
+import router from "./router/index";
+import { checkToken, isLoggedIn, logout } from "./Utils/auth"; // 改为具名导入
+import { axiosPlugin } from "./Utils/axios";
 
 // 导入 v-md-editor 相关库
 import VMdEditor from "@kangc/v-md-editor";
@@ -24,10 +24,19 @@ VMdEditor.use(githubTheme, {
 });
 
 const app = createApp(App);
-app.directive('auth', auth)
-app.use(axiosPlugin) // 使用新的插件名称
+
+// 注册自定义指令
+app.directive('auth', {
+  mounted(el, binding) {
+    if (!isLoggedIn()) {
+      el.style.display = 'none';
+    }
+  }
+});
+
+app.use(axiosPlugin);
 app.use(ElementPlus);
-app.use(router); // 使用router
+app.use(router);
 app.use(VMdEditor);
 
 // 注册所有图标

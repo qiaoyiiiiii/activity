@@ -3,25 +3,27 @@
     <!-- 活动封面和基本信息 -->
     <div class="activity-header">
       <div class="activity-cover">
-        <img
-          src="https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover"
-          alt="活动封面"
-        />
-        <div class="activity-status">报名中</div>
+        <img :src="activity.coverImage" alt="活动封面" />
+        <div class="activity-status">{{ activity.status }}</div>
       </div>
 
       <div class="activity-info-card">
-        <h1 class="activity-title">第五届新茶咖大会</h1>
+        <h1 class="activity-title">{{ activity.title }}</h1>
 
         <div class="activity-meta">
           <div class="meta-item">
-            <el-icon><Calendar /></el-icon>
-            <span>2025年4月11日 8:30 ~ 2025年4月11日 18:30</span>
+            <el-icon><Calendar />报名时间</el-icon>
+            <span>{{ activity.startTime }} ~ {{ activity.endTime }}</span>
+          </div>
+
+          <div class="meta-item">
+            <el-icon><Calendar />活动时间</el-icon>
+            <span>{{ activity.runTime }} ~ {{ activity.dieTime }}</span>
           </div>
 
           <div class="meta-item">
             <el-icon><Location /></el-icon>
-            <span>广东广州流花路120号东方宾馆2号楼(东方国际会展中心)</span>
+            <span>{{ activity.location }}</span>
           </div>
 
           <div class="meta-item organizer">
@@ -31,18 +33,33 @@
                 alt="主办方"
               />
             </div>
-            <span>智慧餐饮Talk</span>
-            <el-tag size="small" type="info" class="verified-tag"
-              >已认证</el-tag
-            >
+            <span>{{ activity.creatorName }}</span>
           </div>
           <div class="registration-section">
-            <el-button type="success" size="large" class="register-button">
-              我要报名
+            <el-button
+              :type="isRegistered ? 'danger' : 'success'"
+              size="large"
+              class="register-button"
+              @click="handleRegistration"
+              :loading="registrationLoading"
+              :disabled="
+                activity.maxParticipants <= activity.number && !isRegistered
+              "
+            >
+              {{ isRegistered ? "取消报名" : "我要报名" }}
             </el-button>
             <div class="stat-item">
-              <el-icon><Star /></el-icon>
-              <span>已收藏 272</span>
+              <el-icon><Avatar /></el-icon>
+              <span
+                >还剩 {{ activity.maxParticipants - activity.number }}名额</span
+              >
+            </div>
+            <div class="stat-item" @click="toggleFavorite">
+              <el-icon :class="{ favorited: isFavorited }"><Star /></el-icon>
+              <span
+                >{{ isFavorited ? "已收藏" : "收藏" }}
+                {{ activity.favoriteCount || 0 }}</span
+              >
             </div>
           </div>
         </div>
@@ -54,24 +71,7 @@
       <h2 class="section-title">活动详情</h2>
 
       <div class="activity-content">
-        <p>
-          第五届新茶咖大会是一场汇聚茶文化与咖啡文化的盛会，旨在促进两种文化的交流与融合。
-        </p>
-        <p>
-          本次大会将邀请来自全球的茶叶和咖啡专家，分享最新的行业趋势、创新技术和可持续发展实践。
-        </p>
-        <p>活动亮点：</p>
-        <ul>
-          <li>国际茶咖展览区，展示全球顶级茶叶和咖啡品牌</li>
-          <li>大师工作坊，学习专业冲泡技巧</li>
-          <li>品鉴会，体验稀有茶种和精品咖啡</li>
-          <li>行业论坛，探讨茶咖产业未来发展</li>
-          <li>跨界合作交流，促进茶咖文化融合创新</li>
-        </ul>
-        <p>
-          无论您是行业专业人士，还是茶咖爱好者，都能在这里找到属于自己的精彩内容。
-        </p>
-        <p>期待您的参与！</p>
+        {{ activity.description }}
       </div>
     </div>
 
@@ -80,7 +80,7 @@
       <h2 class="section-title">活动评论</h2>
 
       <!-- 评论表单 -->
-      <div class="comment-form-container" v-if="user">
+      <div class="comment-form-container" v-auth>
         <div class="comment-form-header">
           <el-avatar :size="40" :src="user.avatar">{{ user.name }}</el-avatar>
           <span class="comment-user-name">{{ user.name }}</span>
@@ -104,7 +104,7 @@
           </div>
         </div>
       </div>
-      <div class="login-to-comment" v-else>
+      <div class="login-to-comment" v-auth>
         <el-alert
           title="请先登录后再发表评论"
           type="info"
@@ -162,13 +162,24 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, getCurrentInstance } from "vue";
 import { ElMessage } from "element-plus";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { faThumbsUp } from "@fortawesome/free-solid-svg-icons";
 
-// 用户信息
-const user = ref(null);
+const proxy = getCurrentInstance();
+const activityId = ref(proxy.$route.params.id);
+
+// 活动数据
+const activity = ref({});
+
+// 收藏状态
+const isFavorited = ref(false);
+const favoriteLoading = ref(false);
+
+// 报名状态
+const isRegistered = ref(false);
+const registrationLoading = ref(false);
 
 // 评论内容
 const commentContent = ref("");
@@ -226,12 +237,169 @@ const submitComment = () => {
   }, 500);
 };
 
-// 页面加载时获取用户信息
-onMounted(() => {
-  const userData = localStorage.getItem("user");
-  if (userData) {
-    user.value = JSON.parse(userData);
+//获取活动内容
+const getactivity = () => {
+  proxy.$request.get(`/api/activities/${activityId.value}`).then((res) => {
+    if (res.data.code === 200) {
+      activity.value = res.data;
+      // 获取活动详情后检查收藏状态和报名状态
+      checkFavoriteStatus();
+      checkRegistrationStatus();
+    }
+  });
+};
+
+// 检查收藏状态
+const checkFavoriteStatus = () => {
+  proxy.$request
+    .get(`/api/activity-favorites/${activityId.value}/has-favorited`)
+    .then((res) => {
+      if (res.data.code === 200) {
+        isFavorited.value = res.data.data || false;
+      }
+    })
+    .catch((error) => {
+      console.error("检查收藏状态失败:", error);
+    });
+};
+
+// 切换收藏状态
+const toggleFavorite = () => {
+  if (favoriteLoading.value) return;
+
+  favoriteLoading.value = true;
+
+  if (isFavorited.value) {
+    // 取消收藏
+    proxy.$request
+      .delete(`/api/activity-favorites/${activityId.value}/unfavorite`)
+      .then((res) => {
+        if (res.data.code === 200) {
+          isFavorited.value = false;
+          if (activity.value.favoriteCount > 0) {
+            activity.value.favoriteCount--;
+          }
+          ElMessage.success("取消收藏成功");
+        } else {
+          ElMessage.error(res.data.message || "取消收藏失败");
+        }
+      })
+      .catch((error) => {
+        console.error("取消收藏失败:", error);
+        ElMessage.error("取消收藏失败，请重试");
+      })
+      .finally(() => {
+        favoriteLoading.value = false;
+      });
+  } else {
+    // 添加收藏
+    proxy.$request
+      .post(`/api/activity-favorites/${activityId.value}/favorite`)
+      .then((res) => {
+        if (res.data.code === 200) {
+          isFavorited.value = true;
+          activity.value.favoriteCount =
+            (activity.value.favoriteCount || 0) + 1;
+          ElMessage.success("收藏成功");
+        } else {
+          ElMessage.error(res.data.message || "收藏失败");
+        }
+      })
+      .catch((error) => {
+        console.error("收藏失败:", error);
+        ElMessage.error("收藏失败，请重试");
+      })
+      .finally(() => {
+        favoriteLoading.value = false;
+      });
   }
+};
+
+// 检查报名状态
+const checkRegistrationStatus = () => {
+  proxy.$request
+    .get(`/api/activity-registrations/${activityId.value}/has-registered`)
+    .then((res) => {
+      if (res.data.code === 200) {
+        isRegistered.value = res.data.data || false;
+      }
+    })
+    .catch((error) => {
+      console.error("检查报名状态失败:", error);
+    });
+};
+
+// 处理报名或取消报名
+const handleRegistration = () => {
+  if (registrationLoading.value) return;
+
+  registrationLoading.value = true;
+
+  if (isRegistered.value) {
+    // 已报名，执行取消报名
+    cancelRegistration();
+  } else {
+    // 未报名，执行报名
+    registerActivity();
+  }
+};
+
+// 报名活动
+const registerActivity = () => {
+  // 检查活动名额
+  if (activity.value.maxParticipants <= activity.value.number) {
+    ElMessage.warning("活动人数已满，无法报名");
+    registrationLoading.value = false;
+    return;
+  }
+
+  proxy.$request
+    .post(`/api/activity-registrations/${activityId.value}/register`)
+    .then((res) => {
+      if (res.data.code === 200) {
+        isRegistered.value = true;
+        activity.value.number++;
+        ElMessage.success("报名成功");
+      } else {
+        ElMessage.error(res.data.message || "报名失败");
+      }
+    })
+    .catch((error) => {
+      console.error("报名失败:", error);
+      ElMessage.error("报名失败，请重试");
+    })
+    .finally(() => {
+      registrationLoading.value = false;
+    });
+};
+
+// 取消报名
+const cancelRegistration = () => {
+  proxy.$request
+    .delete(`/api/activity-registrations/${activityId.value}/cancel`)
+    .then((res) => {
+      if (res.data.code === 200) {
+        isRegistered.value = false;
+        if (activity.value.number > 0) {
+          activity.value.number--;
+        }
+        ElMessage.success("取消报名成功");
+      } else {
+        ElMessage.error(res.data.message || "取消报名失败");
+      }
+    })
+    .catch((error) => {
+      console.error("取消报名失败:", error);
+      ElMessage.error("取消报名失败，请重试");
+    })
+    .finally(() => {
+      registrationLoading.value = false;
+    });
+};
+
+// 页面加载时获取活动信息和收藏状态
+onMounted(() => {
+  getactivity();
 });
 </script>
 
@@ -323,10 +491,6 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.verified-tag {
-  margin-left: 10px;
-}
-
 .section-title {
   font-size: 1.5rem;
   margin-top: 0;
@@ -362,6 +526,12 @@ onMounted(() => {
   padding: 0 3rem;
   height: 50px;
   font-size: 1.1rem;
+  transition: all 0.3s;
+}
+
+.register-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .activity-stats {
@@ -377,6 +547,20 @@ onMounted(() => {
   gap: 0.5rem;
   color: #666;
   font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.stat-item:hover {
+  color: var(--vt-c-primary);
+}
+
+.stat-item .el-icon.favorited {
+  color: #ff9900;
+}
+
+.stat-item:hover .el-icon.favorited {
+  color: #ff6600;
 }
 
 .share-buttons {

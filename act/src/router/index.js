@@ -36,6 +36,11 @@ const router = createRouter({
       component: () => import("../components/personal.vue"),
     },
     {
+      path: "/messages",
+      component: () => import("../views/messages.vue"),
+      // meta: { requiresAuth: true },
+    },
+    {
       path: "/:pathMatch(.*)*",
       name: "NotFound",
       component: () => import("../views/NotFound.vue"),

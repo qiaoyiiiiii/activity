@@ -1,11 +1,16 @@
-import { request } from './axios';
+const auth = {
+  mounted(el, binding) {
+    if (!isLoggedIn()) {
+      el.style.display = 'none';
+    }
+  }
+};
 
 export function checkToken() {
   const token = localStorage.getItem('token');
   if (!token) return false;
 
-  // 可以添加token验证请求
-  return request.get('/api/auth/validate-token')
+  return proxy.$request.get('/api/auth/validate-token')
     .then(() => true)
     .catch(() => {
       localStorage.removeItem('token');
@@ -22,3 +27,6 @@ export function logout() {
   localStorage.removeItem('userid');
   window.location.href = '/login';
 }
+
+// 添加默认导出
+export default auth;

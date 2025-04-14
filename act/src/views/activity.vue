@@ -2,22 +2,34 @@
   <div class="activity">
     <div class="activity-header">
       <div class="search-section">
-        <el-input
-          v-model="formData.title"
+        <div style="display: flex; gap: 10px;width:40%">
+          <el-input
+          v-model="formData.keyword"
           placeholder="搜索活动..."
           class="search-input"
           :prefix-icon="Search"
           clearable
         />
+        <el-select clearable  placeholder="活动类别" v-model="formData.category">
+                <el-option
+                  v-for="item in categories"
+                  :key="item.label"
+                  :label="item.label"
+                  :value="item.label"
+                >
+                  <el-tag type="success">{{ item.label }}</el-tag>
+                </el-option>
+        </el-select>
+        </div>
         <el-select
-          v-model="formData.category"
+          v-model="formData.status"
           placeholder="排序方式"
           class="custom-select"
           style="width: 120px"
           width="120px"
         >
           <el-option
-            v-for="item in options"
+            v-for="item in statusOptions"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -29,21 +41,17 @@
       <el-empty description="暂无活动"></el-empty>
     </div>
     <div class="activity-container" v-else>
-      <el-card
-        v-for="dept in activity"
-        :key="dept.id"
-        class="activity-card"
-      >
+      <el-card v-for="dept in activity" :key="dept.id" class="activity-card">
         <div class="card-content">
           <div class="image-container">
             <el-image
-              :src="dept.image"
+              :src="dept.cover_image"
               fit="cover"
               class="activity-image"
             ></el-image>
             <div class="date-badge">
-              <div class="day">{{ dept.day }}</div>
-              <div class="month-year">{{ dept.monthYear }}</div>
+              <div class="day">{{ dept.time.day }}</div>
+              <div class="month-year">{{ dept.time.monthYear }}</div>
             </div>
           </div>
 
@@ -51,7 +59,12 @@
             <h2 class="activity-title">{{ dept.title }}</h2>
             <p class="activity-description">{{ dept.description }}</p>
 
-            <el-button class="learn-more-btn" size="small" round @click="goDetail(dept)">
+            <el-button
+              class="learn-more-btn"
+              size="small"
+              round
+              @click="goDetail(dept)"
+            >
               了解更多>
             </el-button>
           </div>
@@ -62,8 +75,8 @@
     <!-- 分页器 -->
     <div class="pagination-container">
       <el-pagination
-        current-page="currentPage"
-        page-size="pageSize"
+        current-page="formData.currentPage"
+        page-size="formData.pageSize"
         hide-on-single-page
         :page-sizes="[6, 12, 24, 36]"
         :total="activity.length"
@@ -76,62 +89,53 @@
 </template>
 
 <script setup>
-import { ref, computed, getCurrentInstance } from "vue";
+import { ref, computed, getCurrentInstance, onMounted } from "vue";
 import { Search } from "@element-plus/icons-vue";
+import category, { statusOption } from "../static/category";
+import {formatDate} from "../utils/time";
 
-const currentPage = ref(1);
-const pageSize = ref(6);
-const proxy=getCurrentInstance().proxy;
-
-// 分页数据计算属性
-const currentPageData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return activity.value.slice(start, end);
-});
+const proxy = getCurrentInstance().proxy;
+const categories = ref(category.category);
+const statusOptions = ref(statusOption);
 
 // 分页处理函数
 const handleSizeChange = (val) => {
   pageSize.value = val;
   currentPage.value = 1; // 重置到第一页
+  getList();
 };
 
 const handleCurrentChange = (val) => {
   currentPage.value = val;
+  getList();
 };
 
-const activity = ref([
-  {
-    id: 1,
-    title: "体育科学学院: 跃动青春，理琢学海之韵",
-    description:
-      "体育科学学院成立于2018年4月，其前身体育教育中心成立于2015年5月。体育科学学院现设有体育教育专业、休闲...",
-    image: "/images/sports-activity.jpg",
-    day: "25",
-    monthYear: "2024-06",
-  },
-  {
-    id: 2,
-    title: "健康学院: 乘南粤湾区发展大势 育健康中国未来人才",
-    description:
-      "健康学院于2017年6月揭牌成立，是我校重点建设的新医科学院。学院下设健康管理系和护理学系共4个教研...",
-    image: "/images/health-activity.jpg",
-    day: "22",
-    monthYear: "2024-06",
-  },
-]);
-const options = ref([
-  { label: "综合排序", value: "1" },
-  { label: "最新发布", value: "2" },
-  { label: "最多参与", value: "3" },
-]);
+const activity = ref([]);
 const formData = ref({
-  title: "",
-  category: "综合排序",
+  keyword: "",
+  category: "",
+  status:"pending",
+  currentPage: 1,
+  pageSize: 6,
 });
 
+const getList = () => {
+  proxy.$request.get("/api/activities", { params: formData.value }).then((res) => {
+    if (res.data.code === 200) {
+      res.data.forEach((item) => {
+        item.time= formatDate(item.end_time);
+        activity.value = res.data;
+      });
+    }
+  });
+};
+
 const goDetail = (dept) => {
-    proxy.$router.push(`/activity/${dept.id}`);
+  proxy.$router.push(`/activity/${dept.id}`);
+};
+
+const Mounted = () => {
+  getList();
 };
 </script>
 <style scoped>
@@ -148,7 +152,6 @@ const goDetail = (dept) => {
   background-color: var(--vt-c-white);
   border-radius: 20px;
   box-shadow: none;
-  max-width: 300px;
 }
 
 .search-input :deep(.el-input__wrapper:hover),

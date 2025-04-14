@@ -19,7 +19,7 @@
       </li>
     </ul>
     <div class="avatar">
-      <el-icon style="font-size: 1.5rem;color: #fff"><Bell /></el-icon>
+      <el-icon style="font-size: 1.5rem;color: #fff" @click="$router.push('/notice')" v-auth><Bell /></el-icon>
       <div v-if="user">
         <el-popover placement="bottom" trigger="hover">
           <template #reference>
