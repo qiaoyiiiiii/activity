@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ElMessage } from "element-plus";
 
-// 定义基础 URL
+// 定义基础 URL 
 const baseURL = "http://localhost:9091";
 axios.defaults.withCredentials = true;
 
