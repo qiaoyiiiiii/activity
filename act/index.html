@@ -10,7 +10,57 @@
     <title>学生活动平台</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+    </div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        try {
+          const client = new CozeWebSDK.WebChatClient({
+            config: {
+              bot_id: "7493360228571250723",
+              knowledge_base_id: "7493360907298701348",
+              force_knowledge_base: true,
+              app_info: {
+                app_id: "7469983042153562153",
+                workflow_id: "7493464073612689460",
+              },
+            },
+            componentProps: {
+              title: "活动查询助手",
+            },
+            auth: {
+              type: "token",
+              token:
+                "pat_0dEZZiTdSQ44P0vNSjE0yLwmrVJ8qQrRZFfRCJWPjcB60I01c1UGnbq6wvIsBuck",
+              onRefreshToken: function () {
+                return "pat_0dEZZiTdSQ44P0vNSjE0yLwmrVJ8qQrRZFfRCJWPjcB60I01c1UGnbq6wvIsBuck";
+              },
+            },
+            ui: {
+              asstBtn: {
+                isNeed: true,
+              },
+              chatBot: {
+                title: "活动小助手",
+                uploadable: true,
+                width: 850,
+              },
+              // 注释掉本地文件路径，或改为网络URL
+              // base: { icon: "https://你的域名/图标路径.svg" },
+            },
+            // 添加事件监听，便于调试
+            events: {
+              onInit: () => console.log("SDK初始化成功"),
+              onError: (err) => console.error("SDK错误:", err),
+            },
+          });
+
+          console.log("SDK初始化完成");
+        } catch (e) {
+          console.error("初始化SDK时出错:", e);
+        }
+      });
+    </script>
   </body>
 </html>
