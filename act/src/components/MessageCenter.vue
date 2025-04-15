@@ -62,7 +62,7 @@ const fetchMessages = async () => {
   loading.value = true;
   try {
     const response = await proxy.$request.get("/api/messages");
-    if (response.data.code === 200) {
+    if (response.code === 200) {
       messages.value = response.data.data || [];
     } else {
       ElMessage.error("获取消息失败");
@@ -81,7 +81,7 @@ const markAsRead = async (messageId) => {
     const response = await proxy.$request.put(
       `/api/messages/${messageId}/read`
     );
-    if (response.data.code === 200) {
+    if (response.code === 200) {
       // 更新本地消息状态
       const message = messages.value.find((msg) => msg.id === messageId);
       if (message) {

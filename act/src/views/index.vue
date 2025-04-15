@@ -84,7 +84,7 @@ const getlastest = () => {
 };
 
 const featuredActivities = computed(() => {
-  return latestActivities.slice(0, 3);
+  return latestActivities.value.slice(0, 3);
 });
 </script>
 

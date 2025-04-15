@@ -42,7 +42,7 @@ const router = createRouter({
     },
     {
       path: "/table/:type",
-      component: () => import("../views/table.vue"),
+      component: () => import("../components/table.vue"),
     },
     {
       path: "/:pathMatch(.*)*",

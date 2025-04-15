@@ -155,7 +155,7 @@ const initUserData = (data) => {
 
 const getuser = () => {
   const id = localStorage.getItem("userid");
-  proxy.$request.get("/api/users/profile", { id }).then((res) => {
+  proxy.$request.get(`/api/users/profile/${id}`).then((res) => {
     initUserData(res.data);
   });
 };
@@ -204,7 +204,7 @@ const handleSubmit = async () => {
     if (valid) {
       loading.value = true;
       proxy.$request
-        .put("/api/users/profile", userForm)
+        .put(`/api/users/profile/${localStorage.getItem("userid")}`, userForm)
         .then((res) => {
           ElMessage.success("个人信息更新成功");
           write.value = !write.value;

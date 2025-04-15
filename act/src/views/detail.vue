@@ -166,19 +166,19 @@
         </div>
         <div v-else>
           <div
-            v-for="(comment, index) in comments"
-            :key="comment.id || index"
+            v-for="comment in comments"
+            :key="comment.id"
             class="comment-item"
           >
             <div class="comment-avatar">
-              <el-avatar :size="40" :src="comment.avatar">{{
-                comment.userName ? comment.userName.charAt(0) : "U"
+              <el-avatar :size="40" :src="comment.userAvatar">{{
+                comment.userName ? comment.username.charAt(0) : "U"
               }}</el-avatar>
             </div>
             <div class="comment-content">
               <div class="comment-header">
                 <div class="comment-user-info">
-                  <span class="comment-username">{{ comment.userName }}</span>
+                  <span class="comment-username">{{ comment.username }}</span>
                   <el-rate
                     v-if="comment.rating"
                     v-model="comment.rating"
@@ -187,15 +187,17 @@
                     score-template="{value}"
                   />
                 </div>
-                <span class="comment-time">{{ comment.time }}</span>
+                <span class="comment-time">{{ comment.createdAt }}</span>
               </div>
               <div class="comment-text">{{ comment.content }}</div>
               <div class="comment-actions">
-                <span class="action-item">
-                  <span class="material-icons" style="font-size: 1em"
-                    >thumb_up</span
-                  >
-                  <span>{{ comment.likes || 0 }}</span>
+                <span
+                  class="action-item"
+                  :class="{ liked: comment.hasLiked }"
+                  @click="toggleLike(comment)"
+                >
+                  <el-icon><ThumbUp /></el-icon>
+                  <span>{{ comment.likeCount || 0 }}</span>
                 </span>
               </div>
             </div>
@@ -259,6 +261,9 @@ const commentPagination = reactive({
   total: 0,
 });
 
+// 点赞状态
+const likeLoading = ref(false);
+
 const getComment = () => {
   // 显示加载中状态
   const loading = ElMessage.loading({
@@ -275,6 +280,13 @@ const getComment = () => {
       if (res.code === 200) {
         comments.value = res.data.data || [];
         commentPagination.total = res.data.total || 0;
+
+        // 检查每条评论的点赞状态
+        if (isLoggedIn() && comments.value.length > 0) {
+          comments.value.forEach((comment) => {
+            checkLikeStatus(comment);
+          });
+        }
       }
     })
     .catch((error) => {
@@ -296,14 +308,14 @@ const submitComment = () => {
 
   commentSubmitting.value = true;
 
-  const params = {
+  const commentData = {
     userId: localStorage.getItem("token").id,
     activityId: activityId.value,
     content: commentContent.value,
     createdAt: new Date().toISOString(),
     username: localStorage.getItem("token").username,
     userAvatar: localStorage.getItem("token").avatar,
-    likecount: 0,
+    likeCount: 0,
     hasLiked: false,
     rating: commentRating.value,
   };
@@ -515,6 +527,80 @@ const cancelRegistration = () => {
 const handleCommentPageChange = (page) => {
   commentPagination.currentPage = page;
   getComment();
+};
+
+// 检查评论点赞状态
+const checkLikeStatus = (comment) => {
+  if (!isLoggedIn()) return;
+
+  proxy.$request
+    .get(`/api/activity-reviews/${comment.id}/has-liked`)
+    .then((res) => {
+      if (res.code === 200) {
+        // 使用Vue的响应式API更新评论对象的hasLiked属性
+        comment.hasLiked = true;
+      } else {
+        comment.hasLiked = false;
+      }
+    })
+    .catch((error) => {
+      console.error("检查点赞状态失败:", error);
+    });
+};
+
+// 切换评论点赞状态
+const toggleLike = (comment) => {
+  if (!isLoggedIn()) {
+    ElMessage.warning("请先登录后再点赞");
+    return;
+  }
+
+  if (likeLoading.value) return;
+  likeLoading.value = true;
+
+  if (comment.hasLiked) {
+    // 取消点赞
+    proxy.$request
+      .delete(`/api/activity-reviews/${comment.id}/unlike`)
+      .then((res) => {
+        if (res.code === 200) {
+          comment.hasLiked = false;
+          if (comment.likeCount > 0) {
+            comment.likeCount--;
+          }
+          ElMessage.success("已取消点赞");
+        } else {
+          ElMessage.error(res.data.message || "取消点赞失败");
+        }
+      })
+      .catch((error) => {
+        console.error("取消点赞失败:", error);
+        ElMessage.error("取消点赞失败，请重试");
+      })
+      .finally(() => {
+        likeLoading.value = false;
+      });
+  } else {
+    // 点赞
+    proxy.$request
+      .post(`/api/activity-reviews/${comment.id}/like`)
+      .then((res) => {
+        if (res.code === 200) {
+          comment.hasLiked = true;
+          comment.likeCount = (comment.likeCount || 0) + 1;
+          ElMessage.success("点赞成功");
+        } else {
+          ElMessage.error(res.data.message || "点赞失败");
+        }
+      })
+      .catch((error) => {
+        console.error("点赞失败:", error);
+        ElMessage.error("点赞失败，请重试");
+      })
+      .finally(() => {
+        likeLoading.value = false;
+      });
+  }
 };
 
 // 页面加载时获取活动信息、收藏状态和评论
@@ -853,10 +939,19 @@ onMounted(() => {
   align-items: center;
   gap: 0.3rem;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .action-item:hover {
   color: var(--vt-c-primary);
+}
+
+.action-item.liked {
+  color: var(--color-primary);
+}
+
+.action-item.liked:hover {
+  color: var(--color-primary-dark);
 }
 
 .no-comments {
