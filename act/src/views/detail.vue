@@ -35,8 +35,9 @@
             </div>
             <span>{{ activity.creatorName }}</span>
           </div>
-          <div class="registration-section">
+          <div class="registration-section" v-auth>
             <el-button
+              v-if="activity.status === 'pending'"
               :type="isRegistered ? 'danger' : 'success'"
               size="large"
               class="register-button"
@@ -48,6 +49,32 @@
             >
               {{ isRegistered ? "取消报名" : "我要报名" }}
             </el-button>
+            <el-button
+              v-if="activity.status === 'published' && isRegistered"
+              :type="ischecked ? 'success' : 'info'"
+              size="large"
+              class="register-button"
+              @click.once="handlechecked"
+              :loading="checkLoading"
+            >
+              {{ ischecked ? "签到" : "已签到" }}
+            </el-button>
+            <div v-if="activity.creatorId === localStorage.getItem('token').id">
+              <el-button
+                size="large"
+                class="register-button"
+                @click="$router.push(`/table?id=${activity.id}/check`)"
+              >
+                获取签到列表
+              </el-button>
+              <el-button
+                size="large"
+                class="register-button"
+                @click="$router.push(`/table?id=${activity.id}/uncheck`)"
+              >
+                获取未签到列表
+              </el-button>
+            </div>
             <div class="stat-item">
               <el-icon><Avatar /></el-icon>
               <span
@@ -80,12 +107,21 @@
       <h2 class="section-title">活动评论</h2>
 
       <!-- 评论表单 -->
-      <div class="comment-form-container" v-auth>
+      <div class="comment-form-container" v-if="isLoggedIn()">
         <div class="comment-form-header">
           <el-avatar :size="40" :src="user.avatar">{{ user.name }}</el-avatar>
           <span class="comment-user-name">{{ user.name }}</span>
         </div>
         <div class="comment-form">
+          <div class="rating-container">
+            <span class="rating-label">评分：</span>
+            <el-rate
+              v-model="commentRating"
+              :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+              :texts="['1星', '2星', '3星', '4星', '5星']"
+              show-text
+            />
+          </div>
           <el-input
             v-model="commentContent"
             type="textarea"
@@ -104,7 +140,7 @@
           </div>
         </div>
       </div>
-      <div class="login-to-comment" v-auth>
+      <div class="login-to-comment" v-else>
         <el-alert
           title="请先登录后再发表评论"
           type="info"
@@ -131,17 +167,26 @@
         <div v-else>
           <div
             v-for="(comment, index) in comments"
-            :key="index"
+            :key="comment.id || index"
             class="comment-item"
           >
             <div class="comment-avatar">
               <el-avatar :size="40" :src="comment.avatar">{{
-                comment.userName.charAt(0)
+                comment.userName ? comment.userName.charAt(0) : "U"
               }}</el-avatar>
             </div>
             <div class="comment-content">
               <div class="comment-header">
-                <span class="comment-username">{{ comment.userName }}</span>
+                <div class="comment-user-info">
+                  <span class="comment-username">{{ comment.userName }}</span>
+                  <el-rate
+                    v-if="comment.rating"
+                    v-model="comment.rating"
+                    disabled
+                    text-color="#ff9900"
+                    score-template="{value}"
+                  />
+                </div>
                 <span class="comment-time">{{ comment.time }}</span>
               </div>
               <div class="comment-text">{{ comment.content }}</div>
@@ -155,6 +200,19 @@
               </div>
             </div>
           </div>
+
+          <!-- 评论分页器 -->
+          <div class="comments-pagination">
+            <el-pagination
+              v-if="commentPagination.total > commentPagination.pageSize"
+              :current-page="commentPagination.currentPage"
+              :page-size="commentPagination.pageSize"
+              :total="commentPagination.total"
+              layout="prev, pager, next"
+              @current-change="handleCommentPageChange"
+              hide-on-single-page
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -166,6 +224,7 @@ import { ref, reactive, onMounted, getCurrentInstance } from "vue";
 import { ElMessage } from "element-plus";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { faThumbsUp } from "@fortawesome/free-solid-svg-icons";
+import { isLoggedIn } from "./utils/auth";
 
 const proxy = getCurrentInstance();
 const activityId = ref(proxy.$route.params.id);
@@ -181,29 +240,52 @@ const favoriteLoading = ref(false);
 const isRegistered = ref(false);
 const registrationLoading = ref(false);
 
+//签到状态
+const ischecked = ref(false);
+const checkLoading = ref(false);
+
 // 评论内容
 const commentContent = ref("");
 const commentSubmitting = ref(false);
+const commentRating = ref(5); // 默认为5星
 
 // 评论列表
-const comments = ref([
-  {
-    id: 1,
-    userName: "张三",
-    avatar: "https://via.placeholder.com/40",
-    content: "这个活动看起来很有意思，期待参加！",
-    time: "2025-03-25 14:30",
-    likes: 5,
-  },
-  {
-    id: 2,
-    userName: "李四",
-    avatar: "https://via.placeholder.com/40/ff6b6b/ffffff",
-    content: "上次参加过类似的活动，收获很大，推荐大家报名。",
-    time: "2025-03-26 09:15",
-    likes: 3,
-  },
-]);
+const comments = ref([]);
+
+// 评论分页
+const commentPagination = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0,
+});
+
+const getComment = () => {
+  // 显示加载中状态
+  const loading = ElMessage.loading({
+    message: "加载评论中...",
+    duration: 0,
+  });
+
+  proxy.$request
+    .get(`/api/activity-reviews/activity/${activityId.value}`, {
+      page: commentPagination.currentPage,
+      size: commentPagination.pageSize,
+    })
+    .then((res) => {
+      if (res.code === 200) {
+        comments.value = res.data.data || [];
+        commentPagination.total = res.data.total || 0;
+      }
+    })
+    .catch((error) => {
+      console.error("获取评论失败:", error);
+      ElMessage.error("获取评论失败，请重试");
+    })
+    .finally(() => {
+      // 关闭加载中提示
+      loading.close();
+    });
+};
 
 // 提交评论
 const submitComment = () => {
@@ -214,33 +296,48 @@ const submitComment = () => {
 
   commentSubmitting.value = true;
 
-  // 模拟提交评论到服务器
-  setTimeout(() => {
-    // 创建新评论对象
-    const newComment = {
-      id: comments.value.length + 1,
-      userName: user.value.name,
-      avatar: user.value.avatar,
-      content: commentContent.value,
-      time: new Date().toLocaleString(),
-      likes: 0,
-    };
+  const params = {
+    userId: localStorage.getItem("token").id,
+    activityId: activityId.value,
+    content: commentContent.value,
+    createdAt: new Date().toISOString(),
+    username: localStorage.getItem("token").username,
+    userAvatar: localStorage.getItem("token").avatar,
+    likecount: 0,
+    hasLiked: false,
+    rating: commentRating.value,
+  };
 
-    // 添加到评论列表
-    comments.value.unshift(newComment);
+  // 发送评论到服务器
+  proxy.$request
+    .post(`/api/activity-reviews/${activityId.value}`, commentData)
+    .then((res) => {
+      if (res.code === 200) {
+        // 清空评论框并重置评分
+        commentContent.value = "";
+        commentRating.value = 5; // 重置为默认5星
+        ElMessage.success("评论发表成功");
 
-    // 清空评论框
-    commentContent.value = "";
-
-    ElMessage.success("评论发表成功");
-    commentSubmitting.value = false;
-  }, 500);
+        // 重新加载第一页评论
+        commentPagination.currentPage = 1;
+        getComment();
+      } else {
+        ElMessage.error(res.data.message || "评论发表失败");
+      }
+    })
+    .catch((error) => {
+      console.error("评论发表失败:", error);
+      ElMessage.error("评论发表失败，请重试");
+    })
+    .finally(() => {
+      commentSubmitting.value = false;
+    });
 };
 
 //获取活动内容
 const getactivity = () => {
   proxy.$request.get(`/api/activities/${activityId.value}`).then((res) => {
-    if (res.data.code === 200) {
+    if (res.code === 200) {
       activity.value = res.data;
       // 获取活动详情后检查收藏状态和报名状态
       checkFavoriteStatus();
@@ -254,8 +351,8 @@ const checkFavoriteStatus = () => {
   proxy.$request
     .get(`/api/activity-favorites/${activityId.value}/has-favorited`)
     .then((res) => {
-      if (res.data.code === 200) {
-        isFavorited.value = res.data.data || false;
+      if (res.code === 200) {
+        isFavorited.value = res.data || false;
       }
     })
     .catch((error) => {
@@ -274,7 +371,7 @@ const toggleFavorite = () => {
     proxy.$request
       .delete(`/api/activity-favorites/${activityId.value}/unfavorite`)
       .then((res) => {
-        if (res.data.code === 200) {
+        if (res.code === 200) {
           isFavorited.value = false;
           if (activity.value.favoriteCount > 0) {
             activity.value.favoriteCount--;
@@ -296,7 +393,7 @@ const toggleFavorite = () => {
     proxy.$request
       .post(`/api/activity-favorites/${activityId.value}/favorite`)
       .then((res) => {
-        if (res.data.code === 200) {
+        if (res.code === 200) {
           isFavorited.value = true;
           activity.value.favoriteCount =
             (activity.value.favoriteCount || 0) + 1;
@@ -320,12 +417,29 @@ const checkRegistrationStatus = () => {
   proxy.$request
     .get(`/api/activity-registrations/${activityId.value}/has-registered`)
     .then((res) => {
-      if (res.data.code === 200) {
+      if (res.code === 200) {
         isRegistered.value = res.data.data || false;
       }
     })
     .catch((error) => {
       console.error("检查报名状态失败:", error);
+    });
+};
+
+const checkCode = ref("");
+//处理签到
+const handlechecked = () => {
+  checkLoading.value = true;
+  proxy
+    .$post(`/api/activities/${activityId.value}/generate-code`)
+    .then((res) => {
+      if (res.code === 200) {
+        checkCode.value = res.data.number;
+        ischecked.value = true;
+        ElMessage.success("签到成功");
+      } else {
+        ElMessage.error(res.data.message || "签到失败");
+      }
     });
 };
 
@@ -356,7 +470,7 @@ const registerActivity = () => {
   proxy.$request
     .post(`/api/activity-registrations/${activityId.value}/register`)
     .then((res) => {
-      if (res.data.code === 200) {
+      if (res.code === 200) {
         isRegistered.value = true;
         activity.value.number++;
         ElMessage.success("报名成功");
@@ -378,7 +492,7 @@ const cancelRegistration = () => {
   proxy.$request
     .delete(`/api/activity-registrations/${activityId.value}/cancel`)
     .then((res) => {
-      if (res.data.code === 200) {
+      if (res.code === 200) {
         isRegistered.value = false;
         if (activity.value.number > 0) {
           activity.value.number--;
@@ -397,9 +511,16 @@ const cancelRegistration = () => {
     });
 };
 
-// 页面加载时获取活动信息和收藏状态
+// 处理评论分页变化
+const handleCommentPageChange = (page) => {
+  commentPagination.currentPage = page;
+  getComment();
+};
+
+// 页面加载时获取活动信息、收藏状态和评论
 onMounted(() => {
   getactivity();
+  getComment();
 });
 </script>
 
@@ -653,6 +774,18 @@ onMounted(() => {
   margin-top: 1rem;
 }
 
+.rating-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rating-label {
+  margin-right: 10px;
+  font-weight: 500;
+  color: #606266;
+}
+
 .login-to-comment {
   margin-bottom: 2rem;
 }
@@ -684,6 +817,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+}
+
+.comment-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .comment-username {
@@ -723,6 +862,13 @@ onMounted(() => {
 .no-comments {
   padding: 2rem 0;
   text-align: center;
+}
+
+.comments-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 10px 0;
 }
 
 /* 响应式设计 */

@@ -13,7 +13,7 @@ const router = createRouter({
       component: () => import("../views/activity.vue"),
     },
     {
-      path: "/activity/:id",
+      path: "/detail/:id",
       component: () => import("../views/detail.vue"),
       // meta: { requiresAuth: true } // 添加需要认证的元信息
     },
@@ -39,6 +39,10 @@ const router = createRouter({
       path: "/messages",
       component: () => import("../views/messages.vue"),
       // meta: { requiresAuth: true },
+    },
+    {
+      path: "/table/:type",
+      component: () => import("../views/table.vue"),
     },
     {
       path: "/:pathMatch(.*)*",

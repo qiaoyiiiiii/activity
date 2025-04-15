@@ -13,12 +13,8 @@
         />
       </el-form-item>
 
-      <el-form-item label="活动人数" required>
-        <el-input v-model="formData.maxParticipants" type="number" min="0" />
-      </el-form-item>
-
-      <!-- 报名时间 -->
-      <el-form-item label="报名时间" required>
+      <!-- 举办时间 -->
+      <el-form-item label="举办时间" required>
         <div class="time-range">
           <el-date-picker
             v-model="formData.startTime"
@@ -27,21 +23,6 @@
           />
           <el-date-picker
             v-model="formData.endTime"
-            type="datetime"
-            placeholder="结束时间"
-          />
-        </div>
-      </el-form-item>
-
-      <el-form-item label="举办时间" required>
-        <div class="time-range">
-          <el-date-picker
-            v-model="formData.runTime"
-            type="datetime"
-            placeholder="开始时间"
-          />
-          <el-date-picker
-            v-model="formData.dieTime"
             type="datetime"
             placeholder="结束时间"
           />
@@ -60,7 +41,14 @@
           </el-select>
           <el-select
             v-model="formData.city"
-            placeholder="地市"
+            placeholder="地区"
+            style="width: 200px"
+          >
+            <el-option label="北京市" value="haidian" />
+          </el-select>
+          <el-select
+            v-model="formData.city"
+            placeholder="地区"
             style="width: 200px"
           >
             <el-option label="海淀区" value="haidian" />
@@ -78,12 +66,9 @@
           <div class="upload-area">
             <el-upload
               class="poster-uploader"
-              action="/api/files/upload"
-              name="file"
-              :headers="header"
+              action="#"
               :show-file-list="false"
               :before-upload="beforePosterUpload"
-              :http-request="handlePosterUpload"
             >
               <div class="upload-placeholder">
                 <el-icon><Plus /></el-icon>
@@ -91,21 +76,11 @@
               </div>
             </el-upload>
           </div>
-
-          <!-- 图片预览区域 -->
-          <div v-if="posterUrl" class="image-preview-container">
-            <div class="image-preview-header">
-              <span>海报预览</span>
-              <el-button type="danger" size="small" @click="removePoster"
-                >删除</el-button
-              >
-            </div>
-            <div class="image-preview-content">
-              <img :src="posterUrl" class="poster-preview-image" />
-            </div>
-          </div>
         </div>
         <div class="upload-tips">
+          <el-button type="success" class="poster-library-btn"
+            >海报图库</el-button
+          >
           <p>温馨提示：</p>
           <p>1、图片尺寸 1080*640，jpg 或 .png格式，不超过 4M</p>
           <p>2、精美海报有助于增加报名量，并有机会获得力推荐！</p>
@@ -115,7 +90,7 @@
       <!-- 活动类型 -->
       <el-form-item label="活动类型" required>
         <el-select
-          v-model="formData.category"
+          v-model="formData.type"
           placeholder="请选择活动类型，仅支持1个"
           value-key="label"
           clearable
@@ -142,20 +117,10 @@
           placeholder="点击编辑活动详情（支持Markdown格式）"
           @click="openMarkdownEditor"
           readonly
-        >
-          <template #default>
-            <div v-html="formData.description"></div>
-          </template>
-        </el-input>
-      </el-form-item>
-
-      <el-form-item label-width="0">
-        <el-button type="success" @click="handleCreate" v-auth
-          >确定创建</el-button
-        >
+        ></el-input>
       </el-form-item>
     </el-form>
-    <Dialog
+    <dialog
       :dialogVisible="dialogVisible"
       title="编辑活动详情（Markdown格式）"
       width="80%"
@@ -163,44 +128,36 @@
       @confirm="handleConfirm"
       @cancel="handleCancel"
     >
-      <Markdown :modelValue="markdownContent" @change="handleChange" />
-    </Dialog>
+      <markdown v-model="markdownContent" @change="handleChange" />
+    </dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, getCurrentInstance } from "vue";
+import { ref } from "vue";
 import { Plus } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import categories from "../static/category.js";
-import Dialog from "../components/dialog.vue";
-import Markdown from "../components/markdown.vue";
-
-const proxy = getCurrentInstance();
-const header = ref({
-  Authorization: localStorage.getItem("token"),
-});
+import dialog from "../components/dialog.vue";
+import markdown from "../components/markdown.vue";
 
 const formData = ref({
   title: "",
   startTime: "",
   endTime: "",
-  runTime: "",
-  dieTime: "",
+  country: "中国",
   province: "",
   city: "",
   address: "",
-  category: "",
-  description: "",
-  maxParticipants: 0,
-  coverImg: "",
-  status: "pending",
+  hideLocation: false,
+  hasLiveStream: false,
+  type: "",
+  description: "ao",
 });
 
-const dialogVisible = ref(false);
+const dialogVisible = ref(true);
 const loading = ref(false);
 const markdownContent = ref("");
-const posterUrl = ref(""); // 海报预览URL
 
 // 打开Markdown编辑器
 const openMarkdownEditor = () => {
@@ -252,82 +209,6 @@ const beforePosterUpload = (file) => {
   }
   return true;
 };
-
-// 处理海报上传
-const handlePosterUpload = async (options) => {
-  try {
-    loading.value = true;
-
-    // 调用上传API
-    const response = await proxy.$request.post(
-      "/api/files/upload",
-      { file: options.file },
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    // 处理响应
-    if (response.data && response.data.data) {
-      const { fileUrl } = response.data.data;
-      formData.value.coverImg = fileUrl;
-      posterUrl.value = fileUrl;
-      ElMessage.success("海报上传成功");
-    } else {
-      throw new Error("上传响应格式错误");
-    }
-  } catch (error) {
-    console.error("海报上传失败:", error);
-    ElMessage.error("海报上传失败，请重试");
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 删除海报
-const removePoster = () => {
-  posterUrl.value = "";
-  formData.value.coverImg = "";
-  ElMessage.success("海报已删除");
-};
-
-const handleCreate = () => {
-  // 检查是否上传了海报
-  if (!formData.value.coverImg) {
-    ElMessage.warning("请上传活动海报");
-    return;
-  }
-
-  const params = {
-    ...formData.value,
-    location: `${formData.value.province}-${formData.value.city}-${formData.value.address}`,
-  };
-  delete params.province;
-  delete params.city;
-  delete params.address;
-
-  // 确保 coverImg 已经包含在请求中
-  console.log("提交的数据:", params);
-
-  loading.value = true;
-  proxy.$request
-    .post("/api/activities", params)
-    .then((res) => {
-      if (res.data.code === 200) {
-        ElMessage.success("活动创建成功");
-        router.push("/");
-      }
-    })
-    .catch((error) => {
-      console.error("创建活动失败:", error);
-      ElMessage.error("创建活动失败，请重试");
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-};
 </script>
 
 <style scoped>
@@ -338,7 +219,7 @@ const handleCreate = () => {
 }
 
 .base-info__title {
-  line-height: calc(1.3rem + var(--section-gap));
+  line-height: calc(1.3rem+var(--section-gap));
   padding-left: 30px;
   border-bottom: 1px solid #03b349;
   color: #03b349;
@@ -433,35 +314,6 @@ const handleCreate = () => {
 .poster-library-btn {
   height: 40px;
   align-self: flex-start;
-}
-
-.image-preview-container {
-  margin-top: 15px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  overflow: hidden;
-  width: 100%;
-}
-
-.image-preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #dcdfe6;
-}
-
-.image-preview-content {
-  padding: 15px;
-  display: flex;
-  justify-content: center;
-}
-
-.poster-preview-image {
-  max-width: 100%;
-  max-height: 300px;
-  object-fit: contain;
 }
 
 .upload-tips {

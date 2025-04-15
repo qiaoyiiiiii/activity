@@ -4,12 +4,13 @@
     <div class="carousel">
       <el-carousel :interval="5000" arrow="always">
         <el-carousel-item
-          v-for="(activity, index) in featuredActivities"
-          :key="index"
+          v-for="activity in featuredActivities"
+          :key="activity.id"
+          @click="$router.push(`/detail/${activity.id}`)"
         >
-          <img :src="activity.image" :alt="activity.name" />
+          <img :src="activity.coverImg" :alt="activity.title" />
           <div class="carousel-caption">
-            <h3>{{ activity.name }}</h3>
+            <h3>{{ activity.title }}</h3>
             <p>{{ activity.description }}</p>
           </div>
         </el-carousel-item>
@@ -21,51 +22,22 @@
       <h2 class="section-title">最新活动</h2>
       <div class="activity-grid">
         <div
-          v-for="(activity, index) in latestActivities"
-          :key="index"
+          v-for="activity in latestActivities"
+          :key="activity.id"
           class="activity-card"
-          @click="viewDetails(activity.id)"
+          @click="$router.push(`/detail/${activity.id}`)"
         >
           <div class="activity-image">
-            <img :src="activity.image" :alt="activity.name" />
-            <div class="activity-date">{{ activity.time }}</div>
+            <img :src="activity.coverImg" :alt="activity.name" />
+            <div class="activity-date">{{ activity.endTime }}</div>
           </div>
           <div class="activity-content">
-            <h3 class="activity-title">{{ activity.name }}</h3>
+            <h3 class="activity-title">{{ activity.title }}</h3>
             <p class="activity-location">
               <el-icon><Location /></el-icon> {{ activity.location }}
             </p>
             <p class="activity-participants">
-              <el-icon><User /></el-icon> 已有
-              {{ activity.participants }} 人报名
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 推荐活动区域 -->
-    <div class="recommended-activities">
-      <h2 class="section-title">推荐活动</h2>
-      <div class="activity-grid">
-        <div
-          v-for="(activity, index) in recommendedActivities"
-          :key="index"
-          class="activity-card"
-          @click="viewDetails(activity.id)"
-        >
-          <div class="activity-image">
-            <img :src="activity.image" :alt="activity.name" />
-            <div class="activity-date">{{ activity.time }}</div>
-          </div>
-          <div class="activity-content">
-            <h3 class="activity-title">{{ activity.name }}</h3>
-            <p class="activity-location">
-              <el-icon><Location /></el-icon> {{ activity.location }}
-            </p>
-            <p class="activity-participants">
-              <el-icon><User /></el-icon> 已有
-              {{ activity.participants }} 人报名
+              <el-icon><User /></el-icon> 已有 {{ activity.number }} 人报名
             </p>
           </div>
         </div>
@@ -80,7 +52,7 @@
           v-for="(item, index) in categories.category"
           :key="index"
           class="category-card"
-          @click="filterByCategory(item.label)"
+          @click="$router.push(`/activity?category=${item.label}`)"
         >
           <div class="category-icon">
             <el-icon :icon="getIcon(item.icon)">
@@ -95,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import categories from "../static/category.js";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
@@ -103,146 +75,17 @@ const getIcon = (iconName) => {
   return ElementPlusIconsVue[iconName]; // 动态获取图标组件
 };
 
-// 轮播图数据
-const featuredActivities = ref([
-  {
-    name: "活动1",
-    description: "这是活动1的简介",
-    image:
-      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
-  },
-  {
-    name: "活动2",
-    description: "这是活动2的简介",
-    image:
-      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
-  },
-  {
-    name: "活动3",
-    description: "这是活动3的简介",
-    image:
-      "	https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
-  },
-]);
-
 // 最新活动数据
-const latestActivities = ref([
-  {
-    id: 1,
-    name: "好游戏的基石：连接、创意与创新",
-    time: "2025.03.20",
-    location: "旧金山湾区",
-    participants: 520,
-    image:
-      "https://static.www.tencent.com/uploads/2025/03/24/571ae629ece530a801b7092ab3e63f73.jpg!article.cover",
-  },
-  {
-    id: 2,
-    name: "人工智能与教育的融合",
-    time: "2025.04.15",
-    location: "线上直播",
-    participants: 1024,
-    image: "https://via.placeholder.com/400x250/6cb2eb/ffffff?text=AI教育峰会",
-  },
-  {
-    id: 3,
-    name: "2025春季校园音乐节",
-    time: "2025.05.01",
-    location: "中央广场",
-    participants: 768,
-    image: "https://via.placeholder.com/400x250/ff6b6b/ffffff?text=校园音乐节",
-  },
-  {
-    id: 4,
-    name: "创新创业大赛",
-    time: "2025.05.20",
-    location: "创业中心",
-    participants: 256,
-    image:
-      "https://via.placeholder.com/400x250/a7e8e2/333333?text=创新创业大赛",
-  },
-  {
-    id: 5,
-    name: "环保志愿者招募",
-    time: "2025.06.05",
-    location: "生态公园",
-    participants: 128,
-    image:
-      "https://via.placeholder.com/400x250/b8d8f5/333333?text=环保志愿者招募",
-  },
-  {
-    id: 6,
-    name: "摄影艺术展",
-    time: "2025.06.15",
-    location: "艺术中心",
-    participants: 384,
-    image: "https://via.placeholder.com/400x250/5edfd7/ffffff?text=摄影艺术展",
-  },
-  {
-    id: 7,
-    name: "国际文化交流周",
-    time: "2025.07.01",
-    location: "国际会议中心",
-    participants: 512,
-    image: "https://via.placeholder.com/400x250/7fc1f4/ffffff?text=文化交流周",
-  },
-  {
-    id: 8,
-    name: "夏季运动会",
-    time: "2025.07.15",
-    location: "体育场",
-    participants: 896,
-    image: "https://via.placeholder.com/400x250/ff9f7f/ffffff?text=夏季运动会",
-  },
-]);
-
-// 推荐活动数据
-const recommendedActivities = ref([
-  {
-    id: 101,
-    name: "全球创新科技展",
-    time: "2025.08.10",
-    location: "科技馆",
-    reason: "热门活动",
-    image: "https://via.placeholder.com/400x250/4ecdc4/ffffff?text=创新科技展",
-  },
-  {
-    id: 102,
-    name: "青年创业论坛",
-    time: "2025.08.20",
-    location: "创业中心",
-    reason: "根据您的兴趣推荐",
-    image: "https://via.placeholder.com/400x250/6cb2eb/ffffff?text=创业论坛",
-  },
-  {
-    id: 103,
-    name: "国际电影节",
-    time: "2025.09.01",
-    location: "艺术中心",
-    reason: "热门活动",
-    image: "https://via.placeholder.com/400x250/ff6b6b/ffffff?text=国际电影节",
-  },
-  {
-    id: 104,
-    name: "人工智能大会",
-    time: "2025.09.15",
-    location: "国际会议中心",
-    reason: "热门活动",
-    image: "https://via.placeholder.com/400x250/a7e8e2/333333?text=AI大会",
-  },
-]);
-
-// 查看活动详情
-const viewDetails = (activityId) => {
-  // 跳转到活动详情页
-  console.log("查看活动详情:", activityId);
+const latestActivities = ref([]);
+const getlastest = () => {
+  proxy.$axios.get("/api/activities?page=1&size=8").then((res) => {
+    latestActivities.value = res.data;
+  });
 };
 
-// 根据分类筛选活动
-const filterByCategory = (category) => {
-  // 跳转到活动列表页并筛选对应分类的活动
-  console.log("筛选分类:", category);
-};
+const featuredActivities = computed(() => {
+  return latestActivities.slice(0, 3);
+});
 </script>
 
 <style scoped>

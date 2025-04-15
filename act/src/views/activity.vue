@@ -2,24 +2,31 @@
   <div class="activity">
     <div class="activity-header">
       <div class="search-section">
-        <div style="display: flex; gap: 10px;width:40%">
+        <div style="display: flex; gap: 10px; width: 40%">
           <el-input
-          v-model="formData.keyword"
-          placeholder="搜索活动..."
-          class="search-input"
-          :prefix-icon="Search"
-          clearable
-        />
-        <el-select clearable  placeholder="活动类别" v-model="formData.category">
-                <el-option
-                  v-for="item in categories"
-                  :key="item.label"
-                  :label="item.label"
-                  :value="item.label"
-                >
-                  <el-tag type="success">{{ item.label }}</el-tag>
-                </el-option>
-        </el-select>
+            v-model="formData.keyword"
+            placeholder="回车搜索活动"
+            class="search-input"
+            :prefix-icon="Search"
+            clearable
+            @keyup.enter="getList()"
+          />
+          <el-select
+            clearable
+            placeholder="活动类别"
+            v-model="formData.category"
+            @change="getList()"
+          >
+            <el-option value=""></el-option>
+            <el-option
+              v-for="item in categories"
+              :key="item.label"
+              :label="item.label"
+              :value="item.label"
+            >
+              <el-tag type="success">{{ item.label }}</el-tag>
+            </el-option>
+          </el-select>
         </div>
         <el-select
           v-model="formData.status"
@@ -27,6 +34,7 @@
           class="custom-select"
           style="width: 120px"
           width="120px"
+          @change="getList()"
         >
           <el-option
             v-for="item in statusOptions"
@@ -63,7 +71,7 @@
               class="learn-more-btn"
               size="small"
               round
-              @click="goDetail(dept)"
+              @click="$router.push(`/detail/${dept.id}`)"
             >
               了解更多>
             </el-button>
@@ -79,7 +87,7 @@
         page-size="formData.pageSize"
         hide-on-single-page
         :page-sizes="[6, 12, 24, 36]"
-        :total="activity.length"
+        :total="total"
         layout="total, sizes, prev, pager, next, jumper"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -92,11 +100,14 @@
 import { ref, computed, getCurrentInstance, onMounted } from "vue";
 import { Search } from "@element-plus/icons-vue";
 import category, { statusOption } from "../static/category";
-import {formatDate} from "../utils/time";
+import { formatDate } from "../utils/time";
+import { use } from "marked";
+import { useRoute } from "vue-router";
 
 const proxy = getCurrentInstance().proxy;
 const categories = ref(category.category);
 const statusOptions = ref(statusOption);
+const route = useRoute();
 
 // 分页处理函数
 const handleSizeChange = (val) => {
@@ -113,25 +124,22 @@ const handleCurrentChange = (val) => {
 const activity = ref([]);
 const formData = ref({
   keyword: "",
-  category: "",
-  status:"pending",
+  category: "" || route.query.category,
+  status: "pending",
   currentPage: 1,
   pageSize: 6,
 });
 
 const getList = () => {
-  proxy.$request.get("/api/activities", { params: formData.value }).then((res) => {
-    if (res.data.code === 200) {
+  proxy.$request.get("/api/activities", formData.value).then((res) => {
+    if (res.code === 200) {
       res.data.forEach((item) => {
-        item.time= formatDate(item.end_time);
-        activity.value = res.data;
+        item.time = formatDate(item.end_time);
       });
+      activity.value = res.data;
+      total.value = res.data.total || 0;
     }
   });
-};
-
-const goDetail = (dept) => {
-  proxy.$router.push(`/activity/${dept.id}`);
 };
 
 const Mounted = () => {

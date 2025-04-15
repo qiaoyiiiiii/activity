@@ -309,7 +309,9 @@ const handleRegister = async () => {
       proxy.$request
         .post("/api/auth/register", userdata)
         .then((res) => {
-          if(res.data.code === 200){
+          console.log(res);
+          
+          if(res.code === 200){
             localStorage.setItem("id", res.data.id);
             ElMessage.success("注册成功");
             router.push('/registerinfo');
