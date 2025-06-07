@@ -1,0 +1,30 @@
+name: Validate Commit Message
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Get commit message
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B ${{ github.event.pull_request.head.sha }})
+          echo "$COMMIT_MSG" > .git/COMMIT_EDITMSG
+
+      -name: Clone commit-msg.py repository
+        run: git clone https://gitlab.com/qiaoyiii-group/qiaoyiii-project.git
+        
+      - name: Validate commit message
+        run: python commit-msg.py .git/COMMIT_EDITMSG
