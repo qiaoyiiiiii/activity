@@ -1,0 +1,42 @@
+# GitLab CI/CD 配置文件
+# 用于验证提交信息是否符合规范
+
+stages:
+  - validate
+
+validate_commit_message:
+  stage: validate
+  image: python:3.9-slim
+  script:
+    # 获取最新提交的信息
+    - apt-get update && apt-get install -y git
+    - git clone https://gitlab.com/qiaoyiii-group/qiaoyiii-project.git
+    - COMMIT_MSG=$(git log -1 --pretty=%B)
+    - echo "$COMMIT_MSG" > .git/COMMIT_EDITMSG
+    
+    # 运行提交信息验证脚本
+    - python commit-msg.py .git/COMMIT_EDITMSG
+  rules:
+    # 仅在合并请求时运行
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  artifacts:
+    when: on_failure
+    paths:
+      - .git/COMMIT_EDITMSG
+    expire_in: 1 week
+  allow_failure: false  # 如果验证失败，阻止合并
+
+# 可选：添加评论计数器作业
+count_comments:
+  stage: validate
+  image: python:3.9-slim
+  script:
+    - apt-get update && apt-get install -y git
+    - pip install requests
+    - python gitlab_comments_counter.py --url $CI_SERVER_URL --token $GITLAB_API_TOKEN --project $CI_PROJECT_PATH
+  rules:
+    # 每周一运行一次
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $CI_SCHEDULE_NAME == "weekly_comment_count"
+  variables:
+    GITLAB_API_TOKEN: ${GITLAB_API_TOKEN}  # 需要在GitLab设置中配置此变量
+  allow_failure: true  # 允许此作业失败而不影响整个流水线
